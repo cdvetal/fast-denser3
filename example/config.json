@@ -1,0 +1,70 @@
+{
+  //Evolutionary algorithm parameters
+  "EVOLUTIONARY": {
+
+    //Seeds for setting the initial random and numpy seeds. Enable reproducibility.
+    //Warining: the current seeds only enable performing runs from 0 to 14.
+    "random_seeds": [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400],
+    "numpy_seeds": [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400],
+
+    //Maximum number of generations
+    "num_generations": 150,
+
+    //lambda, i.e., number of offspring
+    "lambda": 4,
+
+    //maximum of epochs to perform. Evolution is halted when the current number of epochs surpasses this value
+    "max_epochs": 10000,
+
+    //place where the experiment is saved
+    "save_path": "./experiments/",
+
+    //rates of the different mutations [0, 1]
+    "MUTATIONS": {
+      "add_layer": 0.25,
+      "reuse_layer": 0.15,
+      "remove_layer": 0.25,
+      "add_connection": 0,
+      "remove_connection": 0,
+      "dsge_layer": 0.15,
+      "macro_layer": 0.3,
+      "train_longer": 0.2
+    }
+  },
+
+  //network specific parameters
+  "NETWORK": {
+    //structure fo the hidden layers of the network [[non-terminal, min, max], ...]
+    "network_structure": [["features", 1, 30], ["classification", 1, 10]],
+
+    //output layer
+    "output": "softmax",
+
+    //macro blocks: currently only learning
+    "macro_structure": ["learning"],
+
+    //number of layers on initialisation
+    "network_structure_init": {"features":[2,3,4], "classification":[1]},
+
+    //number of levels back for each of the blocks
+    "levels_back": {"features": 1, "classification": 1}
+  },
+
+  //training parameters
+  "TRAINING": {
+    //data augmentation generator for the training data - keras interpretable
+    //set to "None" if no data augmentation is to be used
+    "datagen": "ImageDataGenerator(rescale=1/255.0, preprocessing_function=augmentation)",
+
+    //data augmentation generator for the validation and testing data - keras interpretable
+    //Has to be similar to datagen but without data augmentation
+    //set to "None" if no data augmentation is to be used
+    "datagen_test": "ImageDataGenerator(rescale=1/255.0)",
+
+    //maximum training time for each network (in seconds)
+    "default_train_time": 600,
+
+    //fitness assignment metric
+    "fitness_metric": "accuracy"
+  }
+}
