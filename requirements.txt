@@ -1,5 +1,5 @@
 keras
-tensorflow
+tensorflow-gpu
 numpy
 scikit-learn
 Pillow

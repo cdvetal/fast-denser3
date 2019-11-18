@@ -87,7 +87,7 @@ def resize_data(args):
     """
 
     content, shape = args
-    session = tf.Session()
+    session = tf.compat.v1.Session() 
     content = content.reshape(-1, 28, 28, 1)
 
     if shape != (28, 28):
