@@ -42,8 +42,8 @@ def prepare_data(x_train, y_train, x_test, y_test, n_classes=10):
     """
 
 
-    x_train = x_train.astype('float32')
-    x_test = x_test.astype('float32')
+    x_train = x_train.numpy().astype('float32')
+    x_test = x_test.numpy().astype('float32')
 
     x_train = x_train.reshape((-1, 32, 32, 3))
     x_test = x_test.reshape((-1, 32, 32, 3))
@@ -87,16 +87,12 @@ def resize_data(args):
     """
 
     content, shape = args
-    session = tf.compat.v1.Session() 
     content = content.reshape(-1, 28, 28, 1)
 
     if shape != (28, 28):
         content = tf.image.resize(content, shape, tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     
     content = tf.image.grayscale_to_rgb(content)
-    content = content.eval(session=session)
-    session.close()
-    tf.reset_default_graph()
     tf.keras.backend.clear_session()
     
     return content
@@ -138,37 +134,16 @@ def load_dataset(dataset, shape=(32,32)):
         x_train = 255-x_train
         x_test = 255-x_test
 
-
-        pool = Pool(processes=1)
-        result = pool.apply_async(resize_data, [(x_train, shape)])
-        pool.close()
-        pool.join()
-        x_train = result.get()
-
-
-        pool = Pool(processes=1)
-        result = pool.apply_async(resize_data, [(x_test, shape)])
-        pool.close()
-        pool.join()
-        x_test = result.get()
+        x_train = resize_data((x_train, shape))
+        x_test = resize_data((x_test, shape))
 
     elif dataset == 'mnist':
         (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
         n_classes = 10
 
-        pool = Pool(processes=1)
-        result = pool.apply_async(resize_data, [(x_train, shape)])
-        pool.close()
-        pool.join()
-        x_train = result.get()
-
-
-        pool = Pool(processes=1)
-        result = pool.apply_async(resize_data, [(x_test, shape)])
-        pool.close()
-        pool.join()
-        x_test = result.get()
-
+        x_train = resize_data((x_train, shape))
+        x_test = resize_data((x_test, shape))
+        
     #255, unbalanced
     elif dataset == 'svhn':
         x_train, y_train, x_test, y_test = load_svhn(SVHN)

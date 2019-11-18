@@ -287,7 +287,7 @@ class Evaluator:
 
             #dropout layer
             elif layer_type == 'dropout':
-                dropout = keras.layers.Dropout(rate=float(layer_params['rate'][0]))
+                dropout = keras.layers.Dropout(rate=min(0.5, float(layer_params['rate'][0])))
                 layers.append(dropout)
 
             #gru layer #TODO: initializers, recurrent dropout, dropout, unroll, reset_after
@@ -502,7 +502,7 @@ class Evaluator:
         monitor = ModelCheckpoint(weights_save_path, monitor='val_loss',
                                   verbose=DEBUG, save_best_only=True)
 
-        trainable_count = int(np.sum([backend.count_params(p) for p in set(model.trainable_weights)]))
+        trainable_count = model.count_params()
 
         if datagen is not None:
             score = model.fit_generator(datagen.flow(self.dataset['evo_x_train'],
