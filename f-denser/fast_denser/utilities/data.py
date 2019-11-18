@@ -91,7 +91,7 @@ def resize_data(args):
     content = content.reshape(-1, 28, 28, 1)
 
     if shape != (28, 28):
-        content = tf.image.image.resize(content, shape, tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+        content = tf.image.resize(content, shape, tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     
     content = tf.image.grayscale_to_rgb(content)
     content = content.eval(session=session)
