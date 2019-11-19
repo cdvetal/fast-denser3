@@ -1,7 +1,6 @@
 import random
 import keras
 from keras import backend
-from multiprocessing import Pool
 from time import time
 import tensorflow
 import numpy as np
@@ -917,7 +916,6 @@ class Individual:
 
         phenotype = self.decode(grammar)
         start = time()
-        pool = Pool(processes=1)
 
         load_prev_weights = True
         if self.current_time == 0:

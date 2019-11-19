@@ -5,7 +5,7 @@ with open("../readme.md", "r") as fh:
 
 setuptools.setup(
     name="Fast-DENSER", # Replace with your own username
-    version="1.1.0",
+    version="2.1.0",
     author="Filipe Assuncao and Nuno Lourenco",
     author_email="fga@dei.uc.pt",
     description="Fast Deep Evolutionary Network Structured Representation",
@@ -14,10 +14,10 @@ setuptools.setup(
     url="http://github.com/fillassuncao/f-denser",
     packages=setuptools.find_packages(),
     classifiers=[
-        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.7",
         'Intended Audience :: Science/Research',
         "Operating System :: OS Independent",
         'Topic :: Scientific/Engineering :: Artificial Intelligence'
     ],
-    python_requires='>=2.7',
+    python_requires='>=3.7',
 )
