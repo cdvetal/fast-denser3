@@ -2,7 +2,7 @@ import random
 import keras
 from keras import backend
 from time import time
-import tensorflow
+import tensorflow as tf
 import numpy as np
 from keras.callbacks import Callback, ModelCheckpoint
 import os
@@ -542,6 +542,8 @@ class Evaluator:
         score.history['trainable_parameters'] = trainable_count
         score.history['accuracy_test'] = accuracy_test
 
+        tf.keras.backend.clear_session()
+
         return score.history
 
 
@@ -607,7 +609,7 @@ def evaluate(args):
 
     try:
         return cnn_eval.evaluate(phenotype, load_prev_weights, weights_save_path, parent_weights_path, train_time, num_epochs, datagen, datagen_test)
-    except tensorflow.errors.ResourceExhaustedError as e:
+    except tf.errors.ResourceExhaustedError as e:
         return None
 
 
