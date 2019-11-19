@@ -1,6 +1,6 @@
-# Fast-DENSER++: Fast Deep Evolutionary Network Structured Representation
+# Fast-DENSER: Fast Deep Evolutionary Network Structured Representation
 
-F-DENSER++ is a new extension to Deep Evolutionary Network Structured Evolution (DENSER). The vast majority of NeuroEvolution methods that optimise Deep Artificial Neural Networks (DANNs) only evaluate the candidate solutions for a fixed amount of epochs; this makes it difficult to effectively assess the learning strategy, and requires the best generated network to be further trained after evolution. F-DENSER++ enables the training time of the candidate solutions to grow continuously as necessary, i.e., in the initial generations the candidate solutions are trained for shorter times, and as generations proceed it is expected that longer training cycles enable better performances. Consequently, the models discovered by F-DENSER++ are fully-trained DANNs, and are ready for deployment after evolution, without the need for further training. 
+Fast-DENSER is a new extension to Deep Evolutionary Network Structured Evolution (DENSER). The vast majority of NeuroEvolution methods that optimise Deep Artificial Neural Networks (DANNs) only evaluate the candidate solutions for a fixed amount of epochs; this makes it difficult to effectively assess the learning strategy, and requires the best generated network to be further trained after evolution. Fast-DENSER enables the training time of the candidate solutions to grow continuously as necessary, i.e., in the initial generations the candidate solutions are trained for shorter times, and as generations proceed it is expected that longer training cycles enable better performances. Consequently, the models discovered by Fast-DENSER are fully-trained DANNs, and are ready for deployment after evolution, without the need for further training. 
 
 ```
 @article{assunccao2019fast,
@@ -23,9 +23,16 @@ F-DENSER++ is a new extension to Deep Evolutionary Network Structured Evolution 
 ### Requirements
 Currently this codebase only works with python 2. The following libraries are needed: tensorflow, keras, numpy, sklearn, scipy, and jsmin. 
 
-### Usage
+### Instalation
+To install Fast-DENSER as a python library the following steps should be performed: 
 
-`python f_denser.py -d <dataset> -c <config> -r <run> -g <grammar>`
+`pip install -r requirements.txt`
+
+`python setup.py install`
+
+### Framework Usage
+
+`python -m fast_denser.engine -d <dataset> -c <config> -r <run> -g <grammar>`
 
 -d [mandatory] can assume one of the following values: mnist, fashion-mnist, svhn, cifar10, cifar100-fine, cifar100-coarse, tiny-imagenet
 
@@ -35,11 +42,33 @@ Currently this codebase only works with python 2. The following libraries are ne
 
 -g [mandatory] path to the grammar file to be used. Check example/modules.grammar for an example
 
+
+### Library Usage
+
+You can also import Fast-DENSER as a usual python library. An example of the search of CNNs for the fashion-mnist dataset is presented next.
+
+```python
+import fast_denser
+
+fast_denser.search(0, 'fashion-mnist', 'example/config.json', 'example/cnn.grammar')
+```
+
+The first parameter specifies the run, the second the dataset, the third the configuration file, and the last the grammar. 
+
+
+### Unit tests
+
+The units tests can be found in the f-denser/tests folder, and can be executed in the following way:
+
+`python3.7 -m tests.test_utils`
+
+`python3.7 -m tests.test_grammar`
+
 ### Usage example
 
 The example seeks for Convolutional Neural Networks (CNNs) for the classification of the Fashion-MNIST dataset.
 
-`python f_denser.py -d fashion-mnist -c example/config.cfg -g example/cnn.grammar`
+`python3.7 -m fast_denser.engine -d fashion-mnist -c example/config.cfg -g example/cnn.grammar`
 
 ### Docker image
 
@@ -73,7 +102,7 @@ The required parameters, and layers can be easily changed / extended by adapting
 
 ### How to add new layers
 
-To add new layers (or simply change the mandatory parameters) one needs to add (or adapt) the mapping from the phenotype to the keras interpretable model. This can be easily performed by adding the necessary code to the units.py file, in the \"assemble\_network\" function of the Evaluator class (starting in line 244). The code is to be added between the \"#Create layers -- ADD NEW LAYERS HERE\" and \"#END ADD NEW LAYERS\" comments. To change the parameters of an already existing layer there is just the need to change the call to the keras layer constructor. To add new layers a keras layer constructor must be added, and the parameters passed to it. For example, to add a Depthwise Seperable 2D Convolution we would write the following code:
+To add new layers (or simply change the mandatory parameters) one needs to add (or adapt) the mapping from the phenotype to the keras interpretable model. This can be easily performed by adding the necessary code to the utils.py file, in the \"assemble\_network\" function of the Evaluator class (starting in line 244). The code is to be added between the \"#Create layers -- ADD NEW LAYERS HERE\" and \"#END ADD NEW LAYERS\" comments. To change the parameters of an already existing layer there is just the need to change the call to the keras layer constructor. To add new layers a keras layer constructor must be added, and the parameters passed to it. For example, to add a Depthwise Seperable 2D Convolution we would write the following code:
 ```python
 elif layer_type == 'sep-conv':
   sep_conv = keras.layers.SeparableConv2D(filters = int(layer_params['num-filters'][0]),
