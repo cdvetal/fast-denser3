@@ -21,7 +21,7 @@ Fast-DENSER is a new extension to Deep Evolutionary Network Structured Evolution
 ```
 
 ### Requirements
-Currently this codebase only works with python 2. The following libraries are needed: tensorflow, keras, numpy, sklearn, scipy, and jsmin. 
+CUDA >= 10; CuDNN>=7.0; The following python libraries: tensorflow, keras, numpy, sklearn, scipy, jsmin, and Pillow. 
 
 ### Instalation
 To install Fast-DENSER as a python library the following steps should be performed: 

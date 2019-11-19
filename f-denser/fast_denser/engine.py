@@ -17,7 +17,6 @@ from fast_denser.utilities.fitness_metrics import *
 from jsmin import jsmin
 from fast_denser.utilities.data_augmentation import augmentation
 
-
 def save_pop(population, save_path, run, gen):
     """
         Save the current population statistics in json.

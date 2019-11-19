@@ -1,2 +1,2 @@
-from fast_denser._version import __version__
-from fast_denser.engine import main as search
+from .engine import main as search
+__version__ = '2.1.0'
