@@ -542,7 +542,7 @@ class Evaluator:
         score.history['trainable_parameters'] = trainable_count
         score.history['accuracy_test'] = accuracy_test
 
-        tf.keras.backend.clear_session()
+        keras.backend.clear_session()
 
         return score.history
 
