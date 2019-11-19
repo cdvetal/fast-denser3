@@ -611,7 +611,7 @@ def main(run, dataset, config_file, grammar_path):
     #if there is not a previous population
     if unpickle is None:
         #create directories
-        makedirs('%s/run_%d/' % (config["EVOLUTIONARY"]["save_path"], run))
+        makedirs('%s/run_%d/' % (config["EVOLUTIONARY"]["save_path"], run), exist_ok=True)
 
         #set random seeds
         random.seed(config["EVOLUTIONARY"]["random_seeds"][run])
