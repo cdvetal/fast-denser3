@@ -477,7 +477,7 @@ class Evaluator:
         keras_learning = self.get_learning(learning_phenotype)
         batch_size = int(keras_learning['batch_size'])
         
-        if load_prev_weights:
+        if load_prev_weights and os.path.isfile(parent_weights_path.replace('.hdf5', '.h5')):
             model = keras.models.load_model(parent_weights_path.replace('.hdf5', '.h5'))
 
         else:
