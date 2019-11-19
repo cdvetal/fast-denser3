@@ -50,6 +50,7 @@ def save_pop(population, save_path, run, gen):
     """
 
     json_dump = []
+
     for ind in population:
         json_dump.append({
                           'id': ind.id,

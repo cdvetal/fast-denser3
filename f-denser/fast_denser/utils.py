@@ -925,18 +925,18 @@ class Individual:
 
         train_time = self.train_time - self.current_time
 
-        result = pool.apply_async(evaluate, [(cnn_eval, phenotype, load_prev_weights,\
-                                               weights_save_path, parent_weights_path,\
-                                               train_time, self.num_epochs, datagen, datagen_test)])
 
-        pool.close()
-        pool.join()
-        metrics = result.get()
+        metrics = evaluate((cnn_eval, phenotype, load_prev_weights,\
+                            weights_save_path, parent_weights_path,\
+                            train_time, self.num_epochs, datagen, datagen_test))
 
         if metrics is not None:
+            metrics['val_accuracy'] = [i.item() for i in metrics['val_accuracy']]
+            metrics['loss'] = [i.item() for i in metrics['loss']]
+            metrics['accuracy'] = [i.item() for i in metrics['accuracy']]
             self.metrics = metrics
-            self.fitness = self.metrics['accuracy_test']
-            self.num_epochs += len(self.metrics['val_acc'])
+            self.fitness = self.metrics['accuracy_test'].item()
+            self.num_epochs += len(self.metrics['val_accuracy'])
             self.trainable_parameters = self.metrics['trainable_parameters']
             self.current_time += (self.train_time-self.current_time)
         else:
