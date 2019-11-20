@@ -8,6 +8,12 @@ from keras.callbacks import Callback, ModelCheckpoint
 import os
 from fast_denser.utilities.data import load_dataset
 
+gpus = tf.config.experimental.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(gpus[0], True)
+
+#TODO: future -- impose memory constraints 
+# tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=50)])
+
 DEBUG = False
 
 class TimedStopping(keras.callbacks.Callback):
@@ -610,6 +616,8 @@ def evaluate(args):
     try:
         return cnn_eval.evaluate(phenotype, load_prev_weights, weights_save_path, parent_weights_path, train_time, num_epochs, datagen, datagen_test)
     except tf.errors.ResourceExhaustedError as e:
+        return None
+    except TypeError as e2:
         return None
 
 
