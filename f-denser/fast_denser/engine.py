@@ -16,6 +16,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from fast_denser.utilities.fitness_metrics import * 
 from jsmin import jsmin
 from fast_denser.utilities.data_augmentation import augmentation
+from pathlib import Path
 
 def save_pop(population, save_path, run, gen):
     """
@@ -61,7 +62,7 @@ def save_pop(population, save_path, run, gen):
                           'time': ind.time,
                           'train_time': ind.train_time})
 
-    with open('%s/run_%d/gen_%d.csv' % (save_path, run, gen), 'w') as f_json:
+    with open(Path('%s/run_%d/gen_%d.csv' % (save_path, run, gen)), 'w') as f_json:
         f_json.write(json.dumps(json_dump, indent=4))
 
 
@@ -83,7 +84,7 @@ def pickle_evaluator(evaluator, save_path, run):
 
     """
 
-    with open('%s/run_%d/evaluator.pkl' % (save_path, run), 'wb') as handle:
+    with open(Path('%s/run_%d/evaluator.pkl' % (save_path, run)), 'wb') as handle:
         pickle.dump(evaluator, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -113,16 +114,16 @@ def pickle_population(population, parent, save_path, run):
             current evolutionary run
     """
 
-    with open('%s/run_%d/population.pkl' % (save_path, run), 'wb') as handle_pop:
+    with open(Path('%s/run_%d/population.pkl' % (save_path, run)), 'wb') as handle_pop:
         pickle.dump(population, handle_pop, protocol=pickle.HIGHEST_PROTOCOL)
 
-    with open('%s/run_%d/parent.pkl' % (save_path, run), 'wb') as handle_pop:
+    with open(Path('%s/run_%d/parent.pkl' % (save_path, run)), 'wb') as handle_pop:
         pickle.dump(parent, handle_pop, protocol=pickle.HIGHEST_PROTOCOL)
 
-    with open('%s/run_%d/random.pkl' % (save_path, run), 'wb') as handle_random:
+    with open(Path('%s/run_%d/random.pkl' % (save_path, run)), 'wb') as handle_random:
         pickle.dump(random.getstate(), handle_random, protocol=pickle.HIGHEST_PROTOCOL)
 
-    with open('%s/run_%d/numpy.pkl' % (save_path, run), 'wb') as handle_numpy:
+    with open(Path('%s/run_%d/numpy.pkl' % (save_path, run)), 'wb') as handle_numpy:
         pickle.dump(np.random.get_state(), handle_numpy, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -151,7 +152,7 @@ def get_total_epochs(save_path, run, last_gen):
 
     total_epochs = 0
     for gen in range(0, last_gen+1):
-        j = json.load(open('%s/run_%d/gen_%d.csv' % (save_path, run, gen)))
+        j = json.load(open(Path('%s/run_%d/gen_%d.csv' % (save_path, run, gen))))
         num_epochs = [elm['num_epochs'] for elm in j]
         total_epochs += sum(num_epochs)
 
@@ -201,27 +202,27 @@ def unpickle_population(save_path, run):
             Numpy random state
     """
 
-    csvs = glob('%s/run_%d/*.csv' % (save_path, run))
+    csvs = glob(Path('%s/run_%d/*.csv' % (save_path, run)))
     
     if csvs:
-        csvs = [int(csv.split('/')[-1].replace('gen_','').replace('.csv','')) for csv in csvs]
+        csvs = [int(csv.split(os.sep)[-1].replace('gen_','').replace('.csv','')) for csv in csvs]
         last_generation = max(csvs)
 
-        with open('%s/run_%d/evaluator.pkl' % (save_path, run), 'rb') as handle_eval:
+        with open(Path('%s/run_%d/evaluator.pkl' % (save_path, run)), 'rb') as handle_eval:
             pickle_evaluator = pickle.load(handle_eval)
 
-        with open('%s/run_%d/population.pkl' % (save_path, run), 'rb') as handle_pop:
+        with open(Path('%s/run_%d/population.pkl' % (save_path, run)), 'rb') as handle_pop:
             pickle_population = pickle.load(handle_pop)
 
-        with open('%s/run_%d/parent.pkl' % (save_path, run), 'rb') as handle_pop:
+        with open(Path('%s/run_%d/parent.pkl' % (save_path, run)), 'rb') as handle_pop:
             pickle_parent = pickle.load(handle_pop)
 
         pickle_population_fitness = [ind.fitness for ind in pickle_population]
 
-        with open('%s/run_%d/random.pkl' % (save_path, run), 'rb') as handle_random:
+        with open(Path('%s/run_%d/random.pkl' % (save_path, run), 'rb')) as handle_random:
             pickle_random = pickle.load(handle_random)
 
-        with open('%s/run_%d/numpy.pkl' % (save_path, run), 'rb') as handle_numpy:
+        with open(Path('%s/run_%d/numpy.pkl' % (save_path, run), 'rb')) as handle_numpy:
             pickle_numpy = pickle.load(handle_numpy)
 
         total_epochs = get_total_epochs(save_path, run, last_generation)
@@ -563,7 +564,7 @@ def load_config(config_file):
             configuration json file
     """
 
-    with open(config_file) as js_file:
+    with open(Path(config_file)) as js_file:
         minified = jsmin(js_file.read())
 
     config = json.loads(minified)
@@ -715,7 +716,7 @@ def main(run, dataset, config_file, grammar_path):
 
 
     #compute testing performance of the fittest network
-    best_test_acc = cnn_eval.testing_performance('%s/run_%d/best.h5' % (config["EVOLUTIONARY"]["save_path"], run))
+    best_test_acc = cnn_eval.testing_performance(Path('%s/run_%d/best.h5' % (config["EVOLUTIONARY"]["save_path"], run)))
     print('[%d] Best test accuracy: %f' % (run, best_test_acc))
 
 
