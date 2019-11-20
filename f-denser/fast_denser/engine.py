@@ -202,27 +202,27 @@ def unpickle_population(save_path, run):
             Numpy random state
     """
 
-    csvs = glob(str(Path('%s/run_%d/*.csv' % (save_path, run))))
+    csvs = glob(str(Path('%s' % save_path, 'run_%d' % run, '*.csv' )))
     
     if csvs:
         csvs = [int(csv.split(os.sep)[-1].replace('gen_','').replace('.csv','')) for csv in csvs]
         last_generation = max(csvs)
 
-        with open(Path('%s/run_%d/evaluator.pkl' % (save_path, run)), 'rb') as handle_eval:
+        with open(Path('%s' % save_path, 'run_%d' % run, 'evaluator.pkl'), 'rb') as handle_eval:
             pickle_evaluator = pickle.load(handle_eval)
 
-        with open(Path('%s/run_%d/population.pkl' % (save_path, run)), 'rb') as handle_pop:
+        with open(Path('%s' % save_path, 'run_%d' % run, 'population.pkl'), 'rb') as handle_pop:
             pickle_population = pickle.load(handle_pop)
 
-        with open(Path('%s/run_%d/parent.pkl' % (save_path, run)), 'rb') as handle_pop:
-            pickle_parent = pickle.load(handle_pop)
+        with open(Path('%s' % save_path, 'run_%d' % run, 'parent.pkl'), 'rb') as handle_parent:
+            pickle_parent = pickle.load(handle_parent)
 
         pickle_population_fitness = [ind.fitness for ind in pickle_population]
 
-        with open(Path('%s/run_%d/random.pkl' % (save_path, run), 'rb')) as handle_random:
+        with open(Path('%s' % save_path, 'run_%d' % run, 'random.pkl'), 'rb') as handle_random:
             pickle_random = pickle.load(handle_random)
 
-        with open(Path('%s/run_%d/numpy.pkl' % (save_path, run), 'rb')) as handle_numpy:
+        with open(Path('%s' % save_path, 'run_%d' % run, 'numpy.pkl'), 'rb') as handle_numpy:
             pickle_numpy = pickle.load(handle_numpy)
 
         total_epochs = get_total_epochs(save_path, run, last_generation)
@@ -716,7 +716,7 @@ def main(run, dataset, config_file, grammar_path):
 
 
     #compute testing performance of the fittest network
-    best_test_acc = cnn_eval.testing_performance(Path('%s/run_%d/best.h5' % (config["EVOLUTIONARY"]["save_path"], run)))
+    best_test_acc = cnn_eval.testing_performance(str(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best.h5')))
     print('[%d] Best test accuracy: %f' % (run, best_test_acc))
 
 
