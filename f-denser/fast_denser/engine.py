@@ -202,7 +202,7 @@ def unpickle_population(save_path, run):
             Numpy random state
     """
 
-    csvs = glob(Path('%s/run_%d/*.csv' % (save_path, run)))
+    csvs = glob(str(Path('%s/run_%d/*.csv' % (save_path, run))))
     
     if csvs:
         csvs = [int(csv.split(os.sep)[-1].replace('gen_','').replace('.csv','')) for csv in csvs]
