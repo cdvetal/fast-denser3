@@ -693,15 +693,18 @@ def main(run, dataset, config_file, grammar_path):
         #remove temporary files to free disk space
         if gen > 1:
             for x in range(len(population)):
-                if os.path.isfile('%s/run_%d/best_%d_%d.hdf5' % (config["EVOLUTIONARY"]["save_path"], run, gen-2, x)):
-                    os.remove('%s/run_%d/best_%d_%d.hdf5' % (config["EVOLUTIONARY"]["save_path"], run, gen-2, x))
-                    os.remove('%s/run_%d/best_%d_%d.h5' % (config["EVOLUTIONARY"]["save_path"], run, gen-2, x))
+                if os.path.isfile(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.hdf5' % (gen-2, x))):
+                    os.remove(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.hdf5' % (gen-2, x)))
+                    os.remove(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.h5' % (gen-2, x)))
 
         #update best individual
         if best_fitness is None or parent.fitness > best_fitness:
             best_fitness = parent.fitness
-            copyfile('%s/run_%d/best_%d_%d.hdf5' % (config["EVOLUTIONARY"]["save_path"], run,gen, parent.id), '%s/run_%d/best.hdf5' % (config["EVOLUTIONARY"]["save_path"], run))
-            copyfile('%s/run_%d/best_%d_%d.h5' % (config["EVOLUTIONARY"]["save_path"], run,gen, parent.id), '%s/run_%d/best.h5' % (config["EVOLUTIONARY"]["save_path"], run))
+
+            if os.path.isfile(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.hdf5' % (gen, parent.id))):
+                copyfile(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.hdf5' % (gen, parent.id)), Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best.hdf5'))
+                copyfile(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.h5' % (gen, parent.id)), Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best.h5'))
+            
             with open('%s/run_%d/best_parent.pkl' % (config["EVOLUTIONARY"]["save_path"], run), 'wb') as handle:
                 pickle.dump(parent, handle, protocol=pickle.HIGHEST_PROTOCOL)
 

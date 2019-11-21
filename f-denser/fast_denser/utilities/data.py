@@ -42,8 +42,8 @@ def prepare_data(x_train, y_train, x_test, y_test, n_classes=10):
     """
 
 
-    x_train = x_train.numpy().astype('float32')
-    x_test = x_test.numpy().astype('float32')
+    x_train = x_train.astype('float32')
+    x_test = x_test.astype('float32')
 
     x_train = x_train.reshape((-1, 32, 32, 3))
     x_test = x_test.reshape((-1, 32, 32, 3))
@@ -134,15 +134,15 @@ def load_dataset(dataset, shape=(32,32)):
         x_train = 255-x_train
         x_test = 255-x_test
 
-        x_train = resize_data((x_train, shape))
-        x_test = resize_data((x_test, shape))
+        x_train = resize_data((x_train, shape)).numpy()
+        x_test = resize_data((x_test, shape)).numpy()
 
     elif dataset == 'mnist':
         (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
         n_classes = 10
 
-        x_train = resize_data((x_train, shape))
-        x_test = resize_data((x_test, shape))
+        x_train = resize_data((x_train, shape)).numpy()
+        x_test = resize_data((x_test, shape)).numpy()
         
     #255, unbalanced
     elif dataset == 'svhn':

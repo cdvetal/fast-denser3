@@ -7,9 +7,8 @@ import numpy as np
 from keras.callbacks import Callback, ModelCheckpoint
 import os
 from fast_denser.utilities.data import load_dataset
-
-gpus = tf.config.experimental.list_physical_devices('GPU')
-tf.config.experimental.set_memory_growth(gpus[0], True)
+from multiprocessing import Pool
+import contextlib
 
 #TODO: future -- impose memory constraints 
 # tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=50)])
@@ -611,13 +610,20 @@ def evaluate(args):
             training data: loss and accuracy
     """
 
+    import tensorflow as tf
+
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    tf.config.experimental.set_memory_growth(gpus[0], True)
+
     cnn_eval, phenotype, load_prev_weights, weights_save_path, parent_weights_path, train_time, num_epochs, datagen, datagen_test = args
 
     try:
         return cnn_eval.evaluate(phenotype, load_prev_weights, weights_save_path, parent_weights_path, train_time, num_epochs, datagen, datagen_test)
     except tf.errors.ResourceExhaustedError as e:
+        keras.backend.clear_session()
         return None
     except TypeError as e2:
+        keras.backend.clear_session()
         return None
 
 
@@ -933,10 +939,13 @@ class Individual:
 
         train_time = self.train_time - self.current_time
 
-
-        metrics = evaluate((cnn_eval, phenotype, load_prev_weights,\
+        num_pool_workers=1 
+        with contextlib.closing(Pool(num_pool_workers)) as po: 
+            pool_results = po.map_async(evaluate, [(cnn_eval, phenotype, load_prev_weights,\
                             weights_save_path, parent_weights_path,\
-                            train_time, self.num_epochs, datagen, datagen_test))
+                            train_time, self.num_epochs, datagen, datagen_test)])
+            metrics = pool_results.get()[0]
+
 
         if metrics is not None:
             metrics['val_accuracy'] = [i.item() for i in metrics['val_accuracy']]
