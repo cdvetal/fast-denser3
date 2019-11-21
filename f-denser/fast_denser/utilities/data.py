@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 import keras
 from multiprocessing import Pool
 import tensorflow as tf
+import contextlib
 
 #dataset paths - change if the path is different
 SVHN = 'datasets/data/svhn'
@@ -86,6 +87,8 @@ def resize_data(args):
             reshaped instances
     """
 
+    import tensorflow as tf
+
     content, shape = args
     content = content.reshape(-1, 28, 28, 1)
 
@@ -93,9 +96,8 @@ def resize_data(args):
         content = tf.image.resize(content, shape, tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     
     content = tf.image.grayscale_to_rgb(content)
-    tf.keras.backend.clear_session()
     
-    return content
+    return content.numpy()
 
 
 
@@ -134,15 +136,27 @@ def load_dataset(dataset, shape=(32,32)):
         x_train = 255-x_train
         x_test = 255-x_test
 
-        x_train = resize_data((x_train, shape)).numpy()
-        x_test = resize_data((x_test, shape)).numpy()
+        num_pool_workers=1 
+        with contextlib.closing(Pool(num_pool_workers)) as po: 
+            pool_results = po.map_async(resize_data, [(x_train, shape)])
+            x_train = pool_results.get()[0]
+
+        with contextlib.closing(Pool(num_pool_workers)) as po: 
+            pool_results = po.map_async(resize_data, [(x_test, shape)])
+            x_test = pool_results.get()[0]
 
     elif dataset == 'mnist':
         (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
         n_classes = 10
 
-        x_train = resize_data((x_train, shape)).numpy()
-        x_test = resize_data((x_test, shape)).numpy()
+        num_pool_workers=1 
+        with contextlib.closing(Pool(num_pool_workers)) as po: 
+            pool_results = po.map_async(resize_data, [(x_train, shape)])
+            x_train = pool_results.get()[0]
+
+        with contextlib.closing(Pool(num_pool_workers)) as po: 
+            pool_results = po.map_async(resize_data, [(x_test, shape)])
+            x_test = pool_results.get()[0]
         
     #255, unbalanced
     elif dataset == 'svhn':
