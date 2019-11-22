@@ -324,7 +324,7 @@ class Evaluator:
                                              padding=layer_params['padding'][0],
                                              activation=layer_params['activation'][0],
                                              use_bias=eval(layer_params['bias'][0]))
-                layer.add(conv1d)
+                layers.add(conv1d)
 
 
             #END ADD NEW LAYERS
@@ -340,7 +340,6 @@ class Evaluator:
         invalid_layers = []
 
         for layer_idx, layer in enumerate(layers):
-            
             try:
                 if len(keras_layers[layer_idx][1]['input']) == 1:
                     if keras_layers[layer_idx][1]['input'][0] == -1:
@@ -482,13 +481,16 @@ class Evaluator:
         keras_learning = self.get_learning(learning_phenotype)
         batch_size = int(keras_learning['batch_size'])
         
-        if load_prev_weights and os.path.isfile(parent_weights_path.replace('.hdf5', '.h5')):
+        if load_prev_weights and os.path.exists(parent_weights_path.replace('.hdf5', '.h5')):
             model = keras.models.load_model(parent_weights_path.replace('.hdf5', '.h5'))
 
         else:
-            model = self.assemble_network(keras_layers, input_size)
+            if load_prev_weights:
+                num_epochs = 0
 
+            model = self.assemble_network(keras_layers, input_size)
             opt = self.assemble_optimiser(keras_learning)
+
             model.compile(optimizer=opt,
                           loss='categorical_crossentropy',                          
                           metrics=['accuracy'])
@@ -537,7 +539,7 @@ class Evaluator:
         if datagen_test is None:
             y_pred_test = model.predict(self.dataset['evo_x_test'], batch_size=batch_size, verbose=0)
         else:
-            y_pred_test = model.predict_generator(datagen_test.flow(self.dataset['evo_x_test'], batch_size=100, shuffle=False), steps =self.dataset['evo_x_test'].shape[0]//100, verbose=DEBUG)
+            y_pred_test = model.predict_generator(datagen_test.flow(self.dataset['evo_x_test'], batch_size=100, shuffle=False), steps=self.dataset['evo_x_test'].shape[0]//100, verbose=DEBUG)
 
         accuracy_test = self.fitness_metric(self.dataset['evo_y_test'], y_pred_test)
 
@@ -573,7 +575,7 @@ class Evaluator:
             y_pred = model.predict(self.dataset['x_test'])
         else:
             y_pred = model.predict_generator(datagen_test.flow(self.dataset['x_test'], shuffle=False, batch_size=1))
-            
+
         accuracy = self.fitness_metric(self.dataset['y_test'], y_pred)
         return accuracy
 
