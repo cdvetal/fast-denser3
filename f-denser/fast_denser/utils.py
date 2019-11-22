@@ -552,7 +552,7 @@ class Evaluator:
         return score.history
 
 
-    def testing_performance(self, model_path):
+    def testing_performance(self, model_path, datagen_test):
         """
             Compute testing performance of the model
 
@@ -569,7 +569,11 @@ class Evaluator:
         """
 
         model = keras.models.load_model(model_path)
-        y_pred = model.predict(self.dataset['x_test'])
+        if datagen_test is None:
+            y_pred = model.predict(self.dataset['x_test'])
+        else:
+            y_pred = model.predict_generator(datagen_test.flow(self.dataset['x_test'], shuffle=False, batch_size=1))
+            
         accuracy = self.fitness_metric(self.dataset['y_test'], y_pred)
         return accuracy
 

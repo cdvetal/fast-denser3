@@ -719,7 +719,7 @@ def main(run, dataset, config_file, grammar_path):
 
 
     #compute testing performance of the fittest network
-    best_test_acc = cnn_eval.testing_performance(str(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best.h5')))
+    best_test_acc = cnn_eval.testing_performance(str(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best.h5')), config["TRAINING"]["datagen_test"])
     print('[%d] Best test accuracy: %f' % (run, best_test_acc))
 
 
