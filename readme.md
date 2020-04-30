@@ -56,11 +56,29 @@ The configuration file is formated in JSON. An example can be found [here](https
 
 |      Parameter Name     |                                                       Description     |
 |:-------------------:|:----------------------------------------------------------------------------------------------------------------------:|
-|    random_seeds      |  |
-|              |                                       |
-|      |                              |
-|              |                                                                                                                    
-
+|    random_seeds   |  Seeds for setting the initial random seeds for the random library. |
+|    numpy_seeds          |   Seeds for setting the initial random seeds for the numpy library. |                                | num_generations | Maximum number of generations.  |
+|   lambda   |   Number of offspring to generate in each generation.                         |
+|   max_epochs           |    Maximum number of epochs to perform. Evolution is halted when the current number of epochs surpasses this value. |  
+| save_path | Place where the experiments are saved. | 
+| add_layer | Probability to add a layer to an individual (mutation) [0,1]. |
+| reuse_layer | Probability to reuse a layer, when a new layer is added to an individual (mutation) [0,1]. |
+| remove_layer | Probability to remove a layer from an individual (mutation) [0,1]. | 
+| add_connection | Probability to add a connection to the input of a layer (mutation) [0,1]. |  
+| add_connection | Probability to add a connection to the input of a layer (mutation) [0,1]. | 
+| remove_connection | Probability to remove a connection to the input of a layer (mutation) [0,1]. | 
+| dsge_layer | Probability to change any of the DSGE parameters, i.e., grammar expansion possibilities (mutation) [0,1]. | 
+| macro_layer | Probability to change any of the parameters of the macro-blocks (e.g., learning) (mutation) [0,1]. | 
+| train_longer | Probability to train a network for longer (mutation) [0,1]. |
+| network_structure | Network structure, i.e., allowed sequence of layers. |
+| output | Grammar production rule to use as the output layer. | 
+| macro_structure | Production rules to use as macro structure evolutionary units. | 
+| network_structure_init | Number of evolutionary units on initialisation. | 
+| levels_back | Number of levels back for each of the blocks. Settings values higher than one enables skip connections. | 
+| datagen | Data augmentation generator for the training data - keras interpretable. | 
+| datagen_test | Data augmentation generator for the test data - keras interpretable. | 
+| default_train_time | Maximum training time for each network (in seconds). | 
+| fitness_metric | Fitness assignment metric. |
 
 
 ### Library Usage
