@@ -50,6 +50,19 @@ To install Fast-DENSER as a python library the following steps should be perform
 -g [mandatory] path to the grammar file to be used. Check example/modules.grammar for an example
 
 
+### Configuration File Parameters
+
+The configuration file is formated in JSON. An example can be found [here](https://github.com/fillassuncao/fast-denser3/blob/master/example/config.json). A description of the parameters contained in the configuration file is below.
+
+|      Parameter Name     |                                                       Description     |
+|:-------------------:|:----------------------------------------------------------------------------------------------------------------------:|
+|    random_seeds      |  |
+|              |                                       |
+|      |                              |
+|              |                                                                                                                    
+
+
+
 ### Library Usage
 
 You can also import Fast-DENSER as a usual python library. An example of the search of CNNs for the fashion-mnist dataset is presented next.
