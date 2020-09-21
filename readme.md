@@ -21,7 +21,7 @@ Fast-DENSER is a new extension to Deep Evolutionary Network Structured Evolution
 ```
 
 ### Requirements
-CUDA >= 10; CuDNN>=7.0; The following python libraries: tensorflow, keras, numpy, sklearn, scipy, jsmin, and Pillow. 
+CUDA >= 10; CuDNN>=7.0. Python3.7 or higher is required. The following python libraries are required: tensorflow, keras, numpy, sklearn, scipy, jsmin, and Pillow. 
 
 ### Data download
 The datasets are located in the folder f-denser/fast_denser/utilities/datasets/data. In particular, we made available for download data for the svhn and tiny-imagenet datasets. The datasets are obtained from http://ufldl.stanford.edu/housenumbers/ and https://tiny-imagenet.herokuapp.com. To download the datasets simply execute the sh scripts:
