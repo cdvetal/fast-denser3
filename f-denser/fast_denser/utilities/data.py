@@ -21,10 +21,11 @@ import keras
 from multiprocessing import Pool
 import tensorflow as tf
 import contextlib
+import sys
 
 #dataset paths - change if the path is different
-SVHN = 'datasets/data/svhn'
-TINY_IMAGENET = 'datasets/data/tiny-imagenet-200'
+SVHN = 'fast_denser/utilities/datasets/data/svhn'
+TINY_IMAGENET = 'fast_denser/utilities/datasets/data/tiny-imagenet-200'
 
 def prepare_data(x_train, y_train, x_test, y_test, n_classes=10):
     """
@@ -195,6 +196,10 @@ def load_dataset(dataset, shape=(32,32)):
     elif dataset == 'tiny-imagenet':
         x_train, y_train, x_test, y_test = load_tiny_imagenet(TINY_IMAGENET, shape)
         n_classes = 200
+
+    else:
+        print('Error: the dataset is not valid')
+        sys.exit(-1)
 
 
     dataset = prepare_data(x_train, y_train, x_test, y_test, n_classes)

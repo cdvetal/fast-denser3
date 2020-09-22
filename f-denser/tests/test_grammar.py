@@ -17,8 +17,32 @@ class Test(unittest.TestCase):
 <padding> ::= padding:same |  padding:valid
 <softmax> ::= layer:fc act:softmax num-units:10 bias:True
 """
+		grammar._str_()
+		self.assertEqual(grammar.__str__(), output, "Error: grammars differ")
 
-		self.assertEqual(str(grammar), output, "Error: grammars differ")
+
+	def test_read_invalid_grammar(self):
+		import fast_denser.grammar
+
+		with self.assertRaises(SystemExit) as cm:
+			grammar = fast_denser.grammar.Grammar('invalid_path')
+			self.assertEqual(cm.exception.code, -1, "Error: read invalid grammar")
+
+
+	def test_initialise(self):
+		import fast_denser.grammar
+		import random
+		import numpy as np
+
+		random.seed(0)
+		np.random.seed(0)
+
+		output = {'features': [{'ge': 0, 'ga': {}}], 'convolution': [{'ge': 0, 'ga': {'num-filters': ('int', 32.0, 256.0, [42]), 'filter-shape': ('int', 2.0, 5.0, [4]), 'stride': ('int', 1.0, 3.0, [3])}}], 'padding': [{'ge': 1, 'ga': {}}], 'activation-function': [{'ge': 1, 'ga': {}}], 'bias': [{'ge': 1, 'ga': {}}]}
+
+		grammar = fast_denser.grammar.Grammar('tests/utilities/example.grammar')
+		
+		self.assertEqual(grammar.initialise('features'), output, "Error: initialise not equal")
+
 
 
 	def test_decode(self):

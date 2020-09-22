@@ -63,4 +63,4 @@ def mse(y_true, y_pred):
 	    	mean squared errr
     """
 
-	return mean_squred_error(y_true, y_pred)
+	return mean_squared_error(y_true, y_pred)
