@@ -14,41 +14,43 @@
 
 
 import scipy.io
+import numpy as np
+import sys
 
 def load_mat(path):
-	"""
+    """
         Load SVHN mat files
 
         Parameters
         ----------
         dataset_path : str
-        	path to the dataset files
+            path to the dataset files
 
         Returns
         -------
         x : np.array
             instances
         y : np.array
-			labels
+            labels
     """
 
-	data = scipy.io.loadmat(path)
-	x = data['X']
-	y = data['y']-1
+    data = scipy.io.loadmat(path)
+    x = data['X']
+    y = data['y']-1
 
-	x = np.rollaxis(x, 3, 0)
-	y = y.reshape(-1)
+    x = np.rollaxis(x, 3, 0)
+    y = y.reshape(-1)
 
-	return x, y
+    return x, y
 
 def load_svhn(dataset_path):
-	"""
+    """
         Load the SVHN dataset
 
         Parameters
         ----------
         dataset_path : str
-        	path to the dataset files
+            path to the dataset files
 
         Returns
         -------
@@ -62,10 +64,13 @@ def load_svhn(dataset_path):
             testing labels
     """
 
+    try:
+       x_train, y_train = load_mat('%s/train_32x32.mat' % dataset_path)
+       x_test, y_test = load_mat('%s/test_32x32.mat' % dataset_path)
+    except FileNotFoundError:
+       print("Error: you need to download the SVHN files first.")
+       sys.exit(-1)
 
-	x_train, y_train = load_mat('%s/train_32x32.mat' % dataset_path)
-	x_test, y_test = load_mat('%s/test_32x32.mat' % dataset_path)
-
-	return x_train, y_train, x_test, y_test
+    return x_train, y_train, x_test, y_test
 
 
