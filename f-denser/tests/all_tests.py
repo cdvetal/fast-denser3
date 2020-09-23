@@ -180,8 +180,6 @@ class Test(unittest.TestCase):
 		num_layers_before_mutation = len(ind.modules[0].layers)
 
 		new_ind = mutation(ind, grammar, 0, 0, 0, 0, 0, 1, 0, 0, 60)
-		# (individual, grammar, add_layer, re_use_layer, remove_layer, add_connection,\
-  #            remove_connection, dsge_layer, macro_layer, train_longer, default_train_time)
 
 		self.assertEqual(self.count_layers(ind.modules), self.count_layers(new_ind.modules), "Error: change ge parameter")
 

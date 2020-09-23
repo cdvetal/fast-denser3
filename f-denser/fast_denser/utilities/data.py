@@ -111,7 +111,7 @@ def resize_data(args):
     if shape != (28, 28):
         content = tf.image.resize(content, shape, tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     
-    content = tf.image.grayscale_to_rgb(content)
+    content = tf.image.grayscale_to_rgb(tf.constant(content))
     
     return content.numpy()
 

@@ -29,7 +29,71 @@ class Test(unittest.TestCase):
 
 		ind = Individual(network_structure, [], 'softmax', 0).initialise(grammar, levels_back, 0, network_structure_init)
 
+		print(ind.decode(grammar))
+
 		return ind, grammar
+
+
+	def test_pickle_evaluator(self):
+		from fast_denser.utils import Evaluator
+		from fast_denser.utilities.fitness_metrics import accuracy
+		import fast_denser.engine as engine
+		import os
+
+		random.seed(0)
+		ind, grammar = self.create_individual()
+		evaluator = Evaluator('cifar10', accuracy)
+
+		if not os.path.exists('./run_0/'):
+			os.makedirs('./run_0/')
+
+		engine.pickle_evaluator(evaluator, '.', 0)
+
+		self.assertTrue(os.path.exists('./run_0/evaluator.pkl'))
+
+
+
+	def test_save_population(self):
+		from fast_denser.utils import Individual
+		from fast_denser.grammar import Grammar
+		import fast_denser.engine as engine
+		import os
+		import random
+
+		network_structure = [["features", 1, 3]]
+		grammar = Grammar('tests/utilities/example.grammar')
+		levels_back = {"features": 1, "classification": 1}
+		network_structure_init = {"features":[2]}
+
+		ind = Individual(network_structure, [], 'softmax', 0)
+
+		if not os.path.exists('./run_0/'):
+			os.makedirs('./run_0/')
+
+		engine.save_pop([ind], '.', 0, 0)
+
+		self.assertTrue(os.path.exists('./run_0/gen_0.csv'))
+
+		engine.pickle_population([ind], ind, '.', 0)
+
+		self.assertTrue(os.path.exists('./run_0/population.pkl'))
+		self.assertTrue(os.path.exists('./run_0/parent.pkl'))
+		self.assertTrue(os.path.exists('./run_0/random.pkl'))
+		self.assertTrue(os.path.exists('./run_0/numpy.pkl'))
+
+		loaded_data = engine.unpickle_population('.', 0)
+
+		self.assertTrue(loaded_data)
+
+
+	def test_load_config(self):
+		import fast_denser.engine as engine
+
+		config = engine.load_config('tests/utilities/example_config.json')
+
+		self.assertTrue(config)
+
+
 
 	def test_add_layer_random(self):
 		from fast_denser.engine import mutation
@@ -80,8 +144,6 @@ class Test(unittest.TestCase):
 		num_layers_before_mutation = len(ind.modules[0].layers)
 
 		new_ind = mutation(ind, grammar, 0, 0, 0, 0, 0, 1, 0, 0, 60)
-		# (individual, grammar, add_layer, re_use_layer, remove_layer, add_connection,\
-  #            remove_connection, dsge_layer, macro_layer, train_longer, default_train_time)
 
 		self.assertEqual(self.count_layers(ind.modules), self.count_layers(new_ind.modules), "Error: change ge parameter")
 
@@ -115,17 +177,6 @@ class Test(unittest.TestCase):
 
 		self.assertEqual(expected_output, model.get_config(), "Error: mapping")
 
-
-	def test_learning_mapping(self):
-		from fast_denser.utils import Evaluator
-		from fast_denser.utilities.fitness_metrics import accuracy
-
-		random.seed(0)
-		evaluator = Evaluator('mnist', accuracy)
-
-		learning_params = evaluator.get_learning('learning:rmsprop lr:0.1 rho:1 decay:0.000001')
-		optimiser = evaluator.assemble_optimiser(learning_params)
-		self.assertEqual(optimiser, "Error assembling optimiser")
 
 
 if __name__ == '__main__':
