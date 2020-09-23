@@ -451,7 +451,7 @@ class Evaluator:
 
 
     def evaluate(self, phenotype, load_prev_weights, weights_save_path, parent_weights_path,\
-                 train_time, num_epochs, datagen=None, datagen_test = None, input_size=(32, 32, 3)):
+                 train_time, num_epochs, datagen=None, datagen_test = None, input_size=(32, 32, 3)): #pragma: no cover
         """
             Evaluates the keras model using the keras optimiser
 
@@ -569,7 +569,7 @@ class Evaluator:
         return score.history
 
 
-    def testing_performance(self, model_path, datagen_test):
+    def testing_performance(self, model_path, datagen_test): #pragma: no cover
         """
             Compute testing performance of the model
 
@@ -596,7 +596,7 @@ class Evaluator:
 
 
 
-def evaluate(args):
+def evaluate(args): #pragma: no cover
     """
         Function used to deploy a new process to train a candidate solution.
         Each candidate solution is trained in a separe process to avoid memory problems.
@@ -846,7 +846,7 @@ class Individual:
         self.phenotype = None
         self.fitness = None
         self.metrics = None
-        self.num_epochs = None
+        self.num_epochs = 0
         self.trainable_parameters = None
         self.time = None
         self.current_time = 0
@@ -923,7 +923,7 @@ class Individual:
         return self.phenotype
 
 
-    def evaluate(self, grammar, cnn_eval, datagen, datagen_test, weights_save_path, parent_weights_path=''):
+    def evaluate(self, grammar, cnn_eval, datagen, datagen_test, weights_save_path, parent_weights_path=''): #pragma: no cover
         """
             Performs the evaluation of a candidate solution
 

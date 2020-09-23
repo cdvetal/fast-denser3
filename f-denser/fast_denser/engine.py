@@ -250,7 +250,7 @@ def unpickle_population(save_path, run):
 
 
 
-def select_fittest(population, population_fits, grammar, cnn_eval, datagen, datagen_test, gen, save_path, default_train_time):
+def select_fittest(population, population_fits, grammar, cnn_eval, datagen, datagen_test, gen, save_path, default_train_time): #pragma: no cover
     """
         Select the parent to seed the next generation.
 
@@ -592,7 +592,7 @@ def load_config(config_file):
 
 
 
-def main(run, dataset, config_file, grammar_path):
+def main(run, dataset, config_file, grammar_path): #pragma: no cover
     """
         (1+lambda)-ES
 
@@ -739,7 +739,7 @@ def main(run, dataset, config_file, grammar_path):
 
 
 
-def process_input(argv):
+def process_input(argv): #pragma: no cover
     """
         Maps and checks the input parameters and call the main function.
 
@@ -815,7 +815,7 @@ def process_input(argv):
 
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': #pragma: no cover
     import sys, getopt
 
     process_input(sys.argv[1:]) 
