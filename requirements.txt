@@ -1,5 +1,5 @@
 keras
-tensorflow-gpu==2.0.1
+tensorflow-gpu==2.0.3
 numpy
 scikit-learn
 Pillow
