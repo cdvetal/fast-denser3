@@ -969,12 +969,31 @@ class Individual:
 
 
         if metrics is not None:
-            metrics['val_accuracy'] = [i.item() for i in metrics['val_accuracy']]
-            metrics['loss'] = [i.item() for i in metrics['loss']]
-            metrics['accuracy'] = [i.item() for i in metrics['accuracy']]
+            if 'val_accuracy' in metrics:
+                if type(metrics['val_accuracy']) is list:
+                    metrics['val_accuracy'] = [i for i in metrics['val_accuracy']]
+                else:
+                    metrics['val_accuracy'] = [i.item() for i in metrics['val_accuracy']]
+            if 'loss' in metrics:
+                if type(metrics['loss']) is list:
+                    metrics['loss'] = [i for i in metrics['loss']]
+                else:
+                    metrics['loss'] = [i.item() for i in metrics['loss']]
+            if 'accuracy' in metrics:
+                if type(metrics['accuracy']) is list:
+                    metrics['accuracy'] = [i for i in metrics['accuracy']]
+                else:
+                    metrics['accuracy'] = [i.item() for i in metrics['accuracy']]
             self.metrics = metrics
-            self.fitness = self.metrics['accuracy_test'].item()
-            self.num_epochs += len(self.metrics['val_accuracy'])
+            if 'accuracy_test' in metrics:
+                if type(self.metrics['accuracy_test']) is float:
+                    self.fitness = self.metrics['accuracy_test']
+                else:
+                    self.fitness = self.metrics['accuracy_test'].item()
+            if 'val_accuracy' in metrics:
+                self.num_epochs += len(self.metrics['val_accuracy'])
+            else:
+                self.num_epochs += 1
             self.trainable_parameters = self.metrics['trainable_parameters']
             self.current_time += (self.train_time-self.current_time)
         else:
