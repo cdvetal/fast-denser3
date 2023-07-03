@@ -526,7 +526,7 @@ class Evaluator:
         trainable_count = model.count_params()
 
         if datagen is not None:
-            score = model.fit_generator(datagen.flow(self.dataset['evo_x_train'],
+            score = model.fit(datagen.flow(self.dataset['evo_x_train'],
                                                  self.dataset['evo_y_train'],
                                                  batch_size=batch_size),
                                         steps_per_epoch=(self.dataset['evo_x_train'].shape[0]//batch_size),
@@ -554,7 +554,7 @@ class Evaluator:
         if datagen_test is None:
             y_pred_test = model.predict(self.dataset['evo_x_test'], batch_size=batch_size, verbose=0)
         else:
-            y_pred_test = model.predict_generator(datagen_test.flow(self.dataset['evo_x_test'], batch_size=100, shuffle=False), steps=self.dataset['evo_x_test'].shape[0]//100, verbose=DEBUG)
+            y_pred_test = model.predict(datagen_test.flow(self.dataset['evo_x_test'], batch_size=100, shuffle=False), steps=self.dataset['evo_x_test'].shape[0]//100, verbose=DEBUG)
 
         accuracy_test = self.fitness_metric(self.dataset['evo_y_test'], y_pred_test)
 
@@ -589,7 +589,7 @@ class Evaluator:
         if datagen_test is None:
             y_pred = model.predict(self.dataset['x_test'])
         else:
-            y_pred = model.predict_generator(datagen_test.flow(self.dataset['x_test'], shuffle=False, batch_size=1))
+            y_pred = model.predict(datagen_test.flow(self.dataset['x_test'], shuffle=False, batch_size=1))
 
         accuracy = self.fitness_metric(self.dataset['y_test'], y_pred)
         return accuracy
