@@ -13,9 +13,9 @@
 # limitations under the License.
 
 
-from fast_denser.utilities.datasets.svhn import load_svhn
-from fast_denser.utilities.datasets.cifar import load_cifar
-from fast_denser.utilities.datasets.tiny_imagenet import load_tiny_imagenet
+from .datasets.svhn import load_svhn
+from .datasets.cifar import load_cifar
+from .datasets.tiny_imagenet import load_tiny_imagenet
 from sklearn.model_selection import train_test_split
 import keras
 from multiprocessing import Pool

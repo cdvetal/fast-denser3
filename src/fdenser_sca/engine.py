@@ -18,8 +18,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from sys import argv
 import random
 import numpy as np
-from fast_denser.grammar import Grammar
-from fast_denser.utils import Evaluator, Individual
+from .grammar import Grammar
+from .utils import Evaluator, Individual
 from copy import deepcopy
 from os import makedirs
 import pickle
@@ -27,10 +27,10 @@ import os
 from shutil import copyfile
 from glob import glob
 import json
-from keras.preprocessing.image import ImageDataGenerator
-from fast_denser.utilities.fitness_metrics import * 
+# from keras.preprocessing.image import ImageDataGenerator
+from .utilities.fitness_metrics import * 
 from jsmin import jsmin
-from fast_denser.utilities.data_augmentation import augmentation
+from .utilities.data_augmentation import augmentation
 from pathlib import Path
 
 def save_pop(population, save_path, run, gen):

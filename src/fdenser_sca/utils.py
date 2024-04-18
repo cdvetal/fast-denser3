@@ -21,7 +21,7 @@ import tensorflow as tf
 import numpy as np
 from keras.callbacks import Callback, ModelCheckpoint
 import os
-from fast_denser.utilities.data import load_dataset
+from .utilities.data import load_dataset
 from multiprocessing import Pool
 import contextlib
 

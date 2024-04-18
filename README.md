@@ -1,3 +1,7 @@
+# Mattia's Edits
+
+* flat-layout with `pyproject.toml`, plan is to use editable installs to fix the package (https://setuptools.pypa.io/en/latest/userguide/package_discovery.html, https://setuptools.pypa.io/en/latest/userguide/development_mode.html)
+
 # Fast-DENSER: Fast Deep Evolutionary Network Structured Representation
 
 Fast-DENSER is a new extension to Deep Evolutionary Network Structured Evolution (DENSER). The vast majority of NeuroEvolution methods that optimise Deep Artificial Neural Networks (DANNs) only evaluate the candidate solutions for a fixed amount of epochs; this makes it difficult to effectively assess the learning strategy, and requires the best generated network to be further trained after evolution. Fast-DENSER enables the training time of the candidate solutions to grow continuously as necessary, i.e., in the initial generations the candidate solutions are trained for shorter times, and as generations proceed it is expected that longer training cycles enable better performances. Consequently, the models discovered by Fast-DENSER are fully-trained DANNs, and are ready for deployment after evolution, without the need for further training. 
