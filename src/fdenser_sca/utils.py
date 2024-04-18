@@ -432,22 +432,27 @@ class Evaluator:
                 keras optimiser that will be later used to train the model
         """
 
+        initial_learning_rate = float(learning['lr'])
+        lr_schedule = keras.optimizers.schedules.InverseTimeDecay(
+            initial_learning_rate,
+            decay_steps=1,
+            decay_rate=float(learning['decay']),
+        )
+
         if learning['learning'] == 'rmsprop':
-            return keras.optimizers.RMSprop(learning_rate = float(learning['lr']),
+            return keras.optimizers.RMSprop(learning_rate = lr_schedule,
                                             rho = float(learning['rho']),
                                             decay = float(learning['decay']))
         
         elif learning['learning'] == 'gradient-descent':
-            return keras.optimizers.SGD(learning_rate = float(learning['lr']),
+            return keras.optimizers.SGD(learning_rate = lr_schedule,
                                         momentum = float(learning['momentum']),
-                                        decay = float(learning['decay']),
                                         nesterov = bool(learning['nesterov']))
 
         elif learning['learning'] == 'adam':
-            return keras.optimizers.Adam(learning_rate = float(learning['lr']),
+            return keras.optimizers.Adam(learning_rate = lr_schedule,
                                          beta_1 = float(learning['beta1']),
-                                         beta_2 = float(learning['beta2']),
-                                         decay = float(learning['decay']))
+                                         beta_2 = float(learning['beta2']))
 
 
     def evaluate(self, phenotype, load_prev_weights, weights_save_path, parent_weights_path,\
