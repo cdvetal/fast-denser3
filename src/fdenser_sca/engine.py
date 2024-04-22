@@ -710,7 +710,7 @@ def main(run, dataset, config_file, grammar_path): #pragma: no cover
             for x in range(len(population)):
                 if os.path.isfile(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.hdf5' % (gen-2, x))):
                     os.remove(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.hdf5' % (gen-2, x)))
-                    os.remove(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.h5' % (gen-2, x)))
+                    # os.remove(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.hdf5' % (gen-2, x)))
 
         #update best individual
         if best_fitness is None or parent.fitness > best_fitness:
@@ -718,7 +718,7 @@ def main(run, dataset, config_file, grammar_path): #pragma: no cover
 
             if os.path.isfile(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.hdf5' % (gen, parent.id))):
                 copyfile(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.hdf5' % (gen, parent.id)), Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best.hdf5'))
-                copyfile(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.h5' % (gen, parent.id)), Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best.h5'))
+                # copyfile(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.h5' % (gen, parent.id)), Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best.h5'))
             
             with open('%s/run_%d/best_parent.pkl' % (config["EVOLUTIONARY"]["save_path"], run), 'wb') as handle:
                 pickle.dump(parent, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -734,7 +734,7 @@ def main(run, dataset, config_file, grammar_path): #pragma: no cover
 
 
     #compute testing performance of the fittest network
-    best_test_acc = cnn_eval.testing_performance(str(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best.h5')), config["TRAINING"]["datagen_test"])
+    best_test_acc = cnn_eval.testing_performance(str(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best.hdf5')), config["TRAINING"]["datagen_test"])
     print('[%d] Best test accuracy: %f' % (run, best_test_acc))
 
 

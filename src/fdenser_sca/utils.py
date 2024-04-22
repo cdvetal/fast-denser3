@@ -441,8 +441,7 @@ class Evaluator:
 
         if learning['learning'] == 'rmsprop':
             return keras.optimizers.RMSprop(learning_rate = lr_schedule,
-                                            rho = float(learning['rho']),
-                                            decay = float(learning['decay']))
+                                            rho = float(learning['rho']))
         
         elif learning['learning'] == 'gradient-descent':
             return keras.optimizers.SGD(learning_rate = lr_schedule,
@@ -501,8 +500,8 @@ class Evaluator:
         keras_learning = self.get_learning(learning_phenotype)
         batch_size = int(keras_learning['batch_size'])
         
-        if load_prev_weights and os.path.exists(parent_weights_path.replace('.hdf5', '.h5')):
-            model = keras.models.load_model(parent_weights_path.replace('.hdf5', '.h5'))
+        if load_prev_weights and os.path.exists(parent_weights_path):
+            model = keras.models.load_model(parent_weights_path)
 
         else:
             if load_prev_weights:
@@ -553,7 +552,7 @@ class Evaluator:
                               verbose = DEBUG)
 
         #save final moodel to file
-        model.save(weights_save_path.replace('.hdf5', '.h5'))
+        model.save(weights_save_path)
 
         #measure test performance
         if datagen_test is None:
