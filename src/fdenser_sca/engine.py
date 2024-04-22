@@ -27,13 +27,15 @@ import os
 from shutil import copyfile
 from glob import glob
 import json
-# from keras.preprocessing.image import ImageDataGenerator
-from .utilities.fitness_metrics import * 
+import .utilities.fitness_metrics as fitness_metrics
 from jsmin import jsmin
 from .utilities.data_augmentation import augmentation
 from pathlib import Path
 
-def save_pop(population, save_path, run, gen):
+import yaml
+
+
+def save_pop(population, run_path, gen):
     """
         Save the current population statistics in json.
         For each individual:
@@ -77,12 +79,11 @@ def save_pop(population, save_path, run, gen):
                           'time': ind.time,
                           'train_time': ind.train_time})
 
-    with open(Path('%s/run_%d/gen_%d.csv' % (save_path, run, gen)), 'w') as f_json:
+    with open(Path(f'{run_path}/gen_{gen:02d}.json'), 'w') as f_json:
         f_json.write(json.dumps(json_dump, indent=4))
 
 
-
-def pickle_evaluator(evaluator, save_path, run):
+def pickle_evaluator(evaluator, run_path):
     """
         Save the Evaluator instance to later enable resuming evolution
 
@@ -99,12 +100,11 @@ def pickle_evaluator(evaluator, save_path, run):
 
     """
 
-    with open(Path('%s/run_%d/evaluator.pkl' % (save_path, run)), 'wb') as handle:
+    with open(Path(f'{run_path}/evaluator.pkl'), 'wb') as handle:
         pickle.dump(evaluator, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-
-def pickle_population(population, parent, save_path, run):
+def pickle_population(population, parent, run_path):
     """
         Save the objects (pickle) necessary to later resume evolution:
         Pickled objects:
@@ -129,21 +129,20 @@ def pickle_population(population, parent, save_path, run):
             current evolutionary run
     """
 
-    with open(Path('%s/run_%d/population.pkl' % (save_path, run)), 'wb') as handle_pop:
+    with open(Path(f'{run_path}/population.pkl'), 'wb') as handle_pop:
         pickle.dump(population, handle_pop, protocol=pickle.HIGHEST_PROTOCOL)
 
-    with open(Path('%s/run_%d/parent.pkl' % (save_path, run)), 'wb') as handle_pop:
+    with open(Path(f'{run_path}/parent.pkl'), 'wb') as handle_pop:
         pickle.dump(parent, handle_pop, protocol=pickle.HIGHEST_PROTOCOL)
 
-    with open(Path('%s/run_%d/random.pkl' % (save_path, run)), 'wb') as handle_random:
+    with open(Path(f'{run_path}/random.pkl'), 'wb') as handle_random:
         pickle.dump(random.getstate(), handle_random, protocol=pickle.HIGHEST_PROTOCOL)
 
-    with open(Path('%s/run_%d/numpy.pkl' % (save_path, run)), 'wb') as handle_numpy:
+    with open(Path(f'{run_path}/numpy.pkl'), 'wb') as handle_numpy:
         pickle.dump(np.random.get_state(), handle_numpy, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-
-def get_total_epochs(save_path, run, last_gen):
+def get_total_epochs(run_path, last_gen):
     """
         Compute the total number of performed epochs.
 
@@ -167,15 +166,14 @@ def get_total_epochs(save_path, run, last_gen):
 
     total_epochs = 0
     for gen in range(0, last_gen+1):
-        j = json.load(open(Path('%s/run_%d/gen_%d.csv' % (save_path, run, gen))))
+        j = json.load(open(Path(f'{run_path}/gen_{gen:02d}.json')))
         num_epochs = [elm['num_epochs'] for elm in j]
         total_epochs += sum(num_epochs)
 
     return total_epochs
 
 
-
-def unpickle_population(save_path, run):
+def unpickle_population(run_path):
     """
         Save the objects (pickle) necessary to later resume evolution.
         Useful for later conducting more generations.
@@ -217,27 +215,27 @@ def unpickle_population(save_path, run):
             Numpy random state
     """
 
-    csvs = glob(str(Path('%s' % save_path, 'run_%d' % run, '*.csv' )))
+    csvs = glob(str(Path(run_path, '*.json' )))
     
     if csvs:
-        csvs = [int(csv.split(os.sep)[-1].replace('gen_','').replace('.csv','')) for csv in csvs]
+        csvs = [int(csv.split(os.sep)[-1].replace('gen_','').replace('.json','')) for csv in csvs]
         last_generation = max(csvs)
 
-        with open(Path('%s' % save_path, 'run_%d' % run, 'evaluator.pkl'), 'rb') as handle_eval:
+        with open(Path(f'{run_path}/evaluator.pkl'), 'rb') as handle_eval:
             pickle_evaluator = pickle.load(handle_eval)
 
-        with open(Path('%s' % save_path, 'run_%d' % run, 'population.pkl'), 'rb') as handle_pop:
+        with open(Path(f'{run_path}/population.pkl'), 'rb') as handle_pop:
             pickle_population = pickle.load(handle_pop)
 
-        with open(Path('%s' % save_path, 'run_%d' % run, 'parent.pkl'), 'rb') as handle_parent:
+        with open(Path(f'{run_path}/parent.pkl'), 'rb') as handle_parent:
             pickle_parent = pickle.load(handle_parent)
 
         pickle_population_fitness = [ind.fitness for ind in pickle_population]
 
-        with open(Path('%s' % save_path, 'run_%d' % run, 'random.pkl'), 'rb') as handle_random:
+        with open(Path(f'{run_path}/random.pkl'), 'rb') as handle_random:
             pickle_random = pickle.load(handle_random)
 
-        with open(Path('%s' % save_path, 'run_%d' % run, 'numpy.pkl'), 'rb') as handle_numpy:
+        with open(Path(f'{run_path}/numpy.pkl'), 'rb') as handle_numpy:
             pickle_numpy = pickle.load(handle_numpy)
 
         total_epochs = get_total_epochs(save_path, run, last_generation)
@@ -249,8 +247,7 @@ def unpickle_population(save_path, run):
         return None
 
 
-
-def select_fittest(population, population_fits, grammar, cnn_eval, datagen, datagen_test, gen, save_path, default_train_time): #pragma: no cover
+def select_fittest(population, population_fits, grammar, cnn_eval, gen, run_path, default_train_time): #pragma: no cover
     """
         Select the parent to seed the next generation.
 
@@ -305,7 +302,7 @@ def select_fittest(population, population_fits, grammar, cnn_eval, datagen, data
             retrain_elite = True
             elite = population[0]
             elite.train_time = parent.train_time
-            elite.evaluate(grammar, cnn_eval, datagen, datagen_test, '%s/best_%d_%d.hdf5' % (save_path, gen, elite.id), '%s/best_%d_%d.hdf5' % (save_path, gen, elite.id))
+            elite.evaluate(grammar, cnn_eval, '%s/best_%d_%d.hdf5' % (run_path, gen, elite.id), '%s/best_%d_%d.hdf5' % (run_path, gen, elite.id))
             population_fits[0] = elite.fitness
 
         min_train_time = min([ind.current_time for ind in population])
@@ -324,7 +321,7 @@ def select_fittest(population, population_fits, grammar, cnn_eval, datagen, data
 
                 parent_10min.train_time = parent.train_time
 
-                parent_10min.evaluate(grammar, cnn_eval, datagen, datagen_test, '%s/best_%d_%d.hdf5' % (save_path, gen, parent_10min.id), '%s/best_%d_%d.hdf5' % (save_path, gen, parent_10min.id))
+                parent_10min.evaluate(grammar, cnn_eval, '%s/best_%d_%d.hdf5' % (run_path, gen, parent_10min.id), '%s/best_%d_%d.hdf5' % (run_path, gen, parent_10min.id))
 
                 population_fits[population.index(parent_10min)] = parent_10min.fitness
 
@@ -352,7 +349,6 @@ def select_fittest(population, population_fits, grammar, cnn_eval, datagen, data
             return deepcopy(parent)
 
     return deepcopy(parent)
-
 
 
 def mutation_dsge(layer, grammar):
@@ -405,7 +401,6 @@ def mutation_dsge(layer, grammar):
 
         else:
             return NotImplementedError
-
 
 
 def mutation(individual, grammar, add_layer, re_use_layer, remove_layer, add_connection,\
@@ -562,10 +557,9 @@ def mutation(individual, grammar, add_layer, re_use_layer, remove_layer, add_con
     return ind
 
 
-
 def load_config(config_file):
     """
-        Load configuration json file.
+        Load yml configuration file.
 
 
         Parameters
@@ -576,20 +570,21 @@ def load_config(config_file):
         Returns
         -------
         config : dict
-            configuration json file
+            configuration dictionary
     """
 
-    with open(Path(config_file)) as js_file:
-        minified = jsmin(js_file.read())
+    with open(Path(config_file), 'r') as f:
+        config = yaml.safe_load(f)
 
-    config = json.loads(minified)
-
-    config["TRAINING"]["datagen"] = eval(config["TRAINING"]["datagen"])
-    config["TRAINING"]["datagen_test"] = eval(config["TRAINING"]["datagen_test"])
-    config["TRAINING"]["fitness_metric"] = eval(config["TRAINING"]["fitness_metric"])
+    if config['evolutionary']['fitness_metric'] == 'accuracy':
+        config['evolutionary']['fitness_function'] = fitness_metrics.accuracy
+    elif config['evolutionary']['fitness_metric'] == 'mse':
+        config['evolutionary']['fitness_function'] = fitness_metrics.mse
+    else:
+        raise ValueError(f'Invalid fitness metric in config file: 
+            {config['evolutionary']['fitness_metric']}')
 
     return config
-
 
 
 def main(run, dataset, config_file, grammar_path): #pragma: no cover
@@ -615,6 +610,8 @@ def main(run, dataset, config_file, grammar_path): #pragma: no cover
     #load config file
     config = load_config(config_file)
 
+    run_path = Path(config["setup"]["save_path"], f'run_{run:02d}')
+
     #load grammar
     grammar = Grammar(grammar_path)
 
@@ -622,22 +619,22 @@ def main(run, dataset, config_file, grammar_path): #pragma: no cover
     best_fitness = None
 
     #load previous population content (if any)
-    unpickle = unpickle_population(config["EVOLUTIONARY"]["save_path"], run)
+    unpickle = unpickle_population(run_path)
 
     #if there is not a previous population
     if unpickle is None:
         #create directories
-        makedirs('%s/run_%d/' % (config["EVOLUTIONARY"]["save_path"], run), exist_ok=True)
+        makedirs(run_path, exist_ok=True)
 
         #set random seeds
-        random.seed(config["EVOLUTIONARY"]["random_seeds"][run])
-        np.random.seed(config["EVOLUTIONARY"]["numpy_seeds"][run])
+        random.seed(config["setup"]["random_seeds"][run])
+        np.random.seed(config["setup"]["numpy_seeds"][run])
 
         #create evaluator
-        cnn_eval = Evaluator(dataset, config["TRAINING"]["fitness_metric"])
+        cnn_eval = Evaluator(dataset, config["evolutionary"]["fitness_function"])
 
         #save evaluator
-        pickle_evaluator(cnn_eval, config["EVOLUTIONARY"]["save_path"], run)
+        pickle_evaluator(cnn_eval, run_path)
 
         #status variables
         last_gen = -1
@@ -649,11 +646,12 @@ def main(run, dataset, config_file, grammar_path): #pragma: no cover
         random.setstate(pkl_random)
         np.random.set_state(pkl_numpy)
 
+    
 
-    for gen in range(last_gen+1, config["EVOLUTIONARY"]["num_generations"]):
+    for gen in range(last_gen+1, config["evolutionary"]["num_generations"]):
 
         #check the total number of epochs (stop criteria)
-        if total_epochs is not None and total_epochs >= config["EVOLUTIONARY"]["max_epochs"]:
+        if total_epochs is not None and total_epochs >= config["evolutionary"]["max_epochs"]:
             break
 
         if gen == 0:
@@ -661,30 +659,36 @@ def main(run, dataset, config_file, grammar_path): #pragma: no cover
             print('[%d] Performing generation: %d' % (run, gen))
             
             #create initial population
-            population = [Individual(config["NETWORK"]["network_structure"], config["NETWORK"]["macro_structure"],\
-                          config["NETWORK"]["output"], _id_).initialise(grammar, config["NETWORK"]["levels_back"],\
-                          config["EVOLUTIONARY"]["MUTATIONS"]["reuse_layer"], config["NETWORK"]["network_structure_init"]) \
-                          for _id_ in range(config["EVOLUTIONARY"]["lambda"])]
+            population = [Individual(config["network"]["network_structure"], config["network"]["macro_structure"],\
+                          config["network"]["output"], _id_).initialise(grammar, config["network"]["levels_back"],\
+                          config["evolutionary"]["mutations"]["reuse_layer"], config["network"]["network_structure_init"]) \
+                          for _id_ in range(config["evolutionary"]["lambda"])]
 
             #set initial population variables and evaluate population
             population_fits = []
             for idx, ind in enumerate(population):
                 ind.current_time = 0
                 ind.num_epochs = 0
-                ind.train_time = config["TRAINING"]["default_train_time"]
-                population_fits.append(ind.evaluate(grammar, cnn_eval, config["TRAINING"]["datagen"], config["TRAINING"]["datagen_test"], '%s/run_%d/best_%d_%d.hdf5' % (config["EVOLUTIONARY"]["save_path"], run, gen, idx)))
+                ind.train_time = config["evolutionary"]["default_train_time"]
+                population_fits.append(
+                    ind.evaluate(
+                        grammar, 
+                        cnn_eval, 
+                        f'{run_path}/best_{gen}_{idx}.hdf5',
+                    )
+                )
                 ind.id = idx
         
         else:
             print('[%d] Performing generation: %d' % (run, gen))
             
             #generate offspring (by mutation)
-            offspring = [mutation(parent, grammar, config["EVOLUTIONARY"]["MUTATIONS"]["add_layer"],
-                                  config["EVOLUTIONARY"]["MUTATIONS"]["reuse_layer"], config["EVOLUTIONARY"]["MUTATIONS"]["remove_layer"], 
-                                  config["EVOLUTIONARY"]["MUTATIONS"]["add_connection"], config["EVOLUTIONARY"]["MUTATIONS"]["remove_connection"],
-                                  config["EVOLUTIONARY"]["MUTATIONS"]["dsge_layer"], config["EVOLUTIONARY"]["MUTATIONS"]["macro_layer"],
-                                  config["EVOLUTIONARY"]["MUTATIONS"]["train_longer"], config["TRAINING"]["default_train_time"]) 
-                                  for _ in range(config["EVOLUTIONARY"]["lambda"])]
+            offspring = [mutation(parent, grammar, config["evolutionary"]["mutations"]["add_layer"],
+                                  config["evolutionary"]["mutations"]["reuse_layer"], config["evolutionary"]["mutations"]["remove_layer"], 
+                                  config["evolutionary"]["mutations"]["add_connection"], config["evolutionary"]["mutations"]["remove_connection"],
+                                  config["evolutionary"]["mutations"]["dsge_layer"], config["evolutionary"]["mutations"]["macro_layer"],
+                                  config["evolutionary"]["mutations"]["train_longer"], config["evolutionary"]["default_train_time"]) 
+                                  for _ in range(config["evolutionary"]["lambda"])]
 
             population = [parent] + offspring
 
@@ -696,45 +700,48 @@ def main(run, dataset, config_file, grammar_path): #pragma: no cover
             #evaluate population
             population_fits = []
             for idx, ind in enumerate(population):
-                population_fits.append(ind.evaluate(grammar, cnn_eval, config["TRAINING"]["datagen"], config["TRAINING"]["datagen_test"], '%s/run_%d/best_%d_%d.hdf5' % (config["EVOLUTIONARY"]["save_path"], run, gen, idx), '%s/run_%d/best_%d_%d.hdf5' % (config["EVOLUTIONARY"]["save_path"], run, gen-1, parent_id)))
+                population_fits.append(
+                    ind.evaluate(
+                        grammar, 
+                        cnn_eval, 
+                        f'{run_path}/best_{gen}_{idx}.hdf5',
+                        f'{run_path}/best_{gen-1}_{parent_id}.hdf5',
+                    )
+                )
                 ind.id = idx
 
         #select parent
-        parent = select_fittest(population, population_fits, grammar, cnn_eval,\
-                                config["TRAINING"]["datagen"], config["TRAINING"]["datagen_test"], gen, \
-                                config["EVOLUTIONARY"]["save_path"]+'/run_'+str(run),\
-                                config["TRAINING"]["default_train_time"])
+        parent = select_fittest(population, population_fits, grammar, cnn_eval, 
+            gen, run_path, config["evolutionary"]["default_train_time"])
 
         #remove temporary files to free disk space
         if gen > 1:
             for x in range(len(population)):
-                if os.path.isfile(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.hdf5' % (gen-2, x))):
-                    os.remove(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.hdf5' % (gen-2, x)))
-                    # os.remove(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.hdf5' % (gen-2, x)))
+                if os.path.isfile(Path(run_path, f'best_{gen-2}_{x}.hdf5')):
+                    os.remove(Path(run_path, f'best_{gen-2}_{x}.hdf5'))
 
         #update best individual
         if best_fitness is None or parent.fitness > best_fitness:
             best_fitness = parent.fitness
 
-            if os.path.isfile(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.hdf5' % (gen, parent.id))):
-                copyfile(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.hdf5' % (gen, parent.id)), Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best.hdf5'))
-                # copyfile(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best_%d_%d.h5' % (gen, parent.id)), Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best.h5'))
-            
-            with open('%s/run_%d/best_parent.pkl' % (config["EVOLUTIONARY"]["save_path"], run), 'wb') as handle:
+            if os.path.isfile(Path(run_path, f'best_{gen}_{parent.id}.hdf5')):
+                copyfile(Path(run_path, f'best_{gen}_{parent.id}.hdf5'), Path(f'best.hdf5'))
+
+            with open(Path(run_path, 'best_parent.pkl'), 'wb') as handle:
                 pickle.dump(parent, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         print('[%d] Best fitness of generation %d: %f' % (run, gen, max(population_fits)))
         print('[%d] Best overall fitness: %f' % (run, best_fitness))
 
         #save population
-        save_pop(population, config["EVOLUTIONARY"]["save_path"], run, gen)
-        pickle_population(population, parent, config["EVOLUTIONARY"]["save_path"], run)
+        save_pop(population, run_path, gen)
+        pickle_population(population, parent, run_path)
 
         total_epochs += sum([ind.num_epochs for ind in population])
 
 
     #compute testing performance of the fittest network
-    best_test_acc = cnn_eval.testing_performance(str(Path('%s' % config["EVOLUTIONARY"]["save_path"], 'run_%d' % run, 'best.hdf5')), config["TRAINING"]["datagen_test"])
+    best_test_acc = cnn_eval.testing_performance(str(Path(run_path, 'best.hdf5')))
     print('[%d] Best test accuracy: %f' % (run, best_test_acc))
 
 

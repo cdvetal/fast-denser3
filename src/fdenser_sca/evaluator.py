@@ -14,97 +14,18 @@
 
 
 import random
-import keras
 from keras import backend
-from time import time
 import tensorflow as tf
 import numpy as np
-from keras.callbacks import Callback, ModelCheckpoint
+from keras.callbacks import ModelCheckpoint
 import os
 from .utilities.data import load_dataset
-from multiprocessing import Pool
 import contextlib
 
 #TODO: future -- impose memory constraints 
 # tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=50)])
 
 DEBUG = False
-
-class TimedStopping(keras.callbacks.Callback):
-    """
-        Stop training when maximum time has passed.
-        Code from:
-            https://github.com/keras-team/keras-contrib/issues/87
-
-        Attributes
-        ----------
-        start_time : float
-            time when the training started
-        
-        seconds : float 
-            maximum time before stopping.
-        
-        verbose : bool 
-            verbosity mode.
-
-
-        Methods
-        -------
-        on_train_begin(logs)
-            method called upon training beginning
-
-        on_epoch_end(epoch, logs={})
-            method called after the end of each training epoch
-    """
-
-    def __init__(self, seconds=None, verbose=0):
-        """
-        Parameters
-        ----------
-        seconds : float
-            maximum time before stopping.
-
-        vebose : bool
-            verbosity mode
-        """
-
-        super(keras.callbacks.Callback, self).__init__()
-
-        self.start_time = 0
-        self.seconds = seconds
-        self.verbose = verbose
-
-
-    def on_train_begin(self, logs={}):
-        """
-            Method called upon training beginning
-
-            Parameters
-            ----------
-            logs : dict
-                training logs
-        """
-
-        self.start_time = time()
-
-    def on_epoch_end(self, epoch, logs={}):
-        """
-            Method called after the end of each training epoch.
-            Checks if the maximum time has passed
-
-            Parameters
-            ----------
-            epoch : int
-                current epoch
-
-            logs : dict
-                training logs
-        """
-
-        if time() - self.start_time > self.seconds:
-            self.model.stop_training = True
-            if self.verbose:
-                print('Stopping after %s seconds.' % self.seconds)
 
 
 class Evaluator:
@@ -157,7 +78,9 @@ class Evaluator:
                 dataset to be loaded
         """
 
+        # define the dataset on which the models will be evaluated
         self.dataset = load_dataset(dataset)
+        # define the metric used to evaluate the models
         self.fitness_metric = fitness_metric
 
 
@@ -455,7 +378,7 @@ class Evaluator:
 
 
     def evaluate(self, phenotype, load_prev_weights, weights_save_path, parent_weights_path,\
-                 train_time, num_epochs, datagen=None, datagen_test = None, input_size=(32, 32, 3)): #pragma: no cover
+                 train_time, num_epochs, input_size=(32, 32, 3)): #pragma: no cover
         """
             Evaluates the keras model using the keras optimiser
 
@@ -529,36 +452,22 @@ class Evaluator:
 
         trainable_count = model.count_params()
 
-        if datagen is not None:
-            score = model.fit_generator(datagen.flow(self.dataset['evo_x_train'],
-                                                 self.dataset['evo_y_train'],
-                                                 batch_size=batch_size),
-                                        steps_per_epoch=(self.dataset['evo_x_train'].shape[0]//batch_size),
-                                        epochs=int(keras_learning['epochs']),
-                                        validation_data=(datagen_test.flow(self.dataset['evo_x_val'], self.dataset['evo_y_val'], batch_size=batch_size)),
-                                        validation_steps = (self.dataset['evo_x_val'].shape[0]//batch_size),
-                                        callbacks = [early_stop, time_stop, monitor],
-                                        initial_epoch = num_epochs,
-                                        verbose= DEBUG)
-        else:
-            score = model.fit(x = self.dataset['evo_x_train'], 
-                              y = self.dataset['evo_y_train'],
-                              batch_size = batch_size,
-                              epochs = int(keras_learning['epochs']),
-                              steps_per_epoch=(self.dataset['evo_x_train'].shape[0]//batch_size),
-                              validation_data=(self.dataset['evo_x_val'], self.dataset['evo_y_val']),
-                              callbacks = [early_stop, time_stop, monitor],
-                              initial_epoch = num_epochs,
-                              verbose = DEBUG)
+        score = model.fit(x = self.dataset['evo_x_train'], 
+                            y = self.dataset['evo_y_train'],
+                            batch_size = batch_size,
+                            epochs = int(keras_learning['epochs']),
+                            steps_per_epoch=(self.dataset['evo_x_train'].shape[0]//batch_size),
+                            validation_data=(self.dataset['evo_x_val'], self.dataset['evo_y_val']),
+                            callbacks = [early_stop, time_stop, monitor],
+                            initial_epoch = num_epochs,
+                            verbose = DEBUG)
 
         #save final moodel to file
         model.save(weights_save_path)
 
         #measure test performance
-        if datagen_test is None:
-            y_pred_test = model.predict(self.dataset['evo_x_test'], batch_size=batch_size, verbose=0)
-        else:
-            y_pred_test = model.predict_generator(datagen_test.flow(self.dataset['evo_x_test'], batch_size=100, shuffle=False), steps=self.dataset['evo_x_test'].shape[0]//100, verbose=DEBUG)
+        y_pred_test = model.predict(self.dataset['evo_x_test'], batch_size=batch_size, verbose=0)
+
 
         accuracy_test = self.fitness_metric(self.dataset['evo_y_test'], y_pred_test)
 
@@ -573,7 +482,7 @@ class Evaluator:
         return score.history
 
 
-    def testing_performance(self, model_path, datagen_test): #pragma: no cover
+    def testing_performance(self, model_path): #pragma: no cover
         """
             Compute testing performance of the model
 
@@ -590,17 +499,14 @@ class Evaluator:
         """
 
         model = keras.models.load_model(model_path)
-        if datagen_test is None:
-            y_pred = model.predict(self.dataset['x_test'])
-        else:
-            y_pred = model.predict_generator(datagen_test.flow(self.dataset['x_test'], shuffle=False, batch_size=1))
+        y_pred = model.predict(self.dataset['x_test'])
 
         accuracy = self.fitness_metric(self.dataset['y_test'], y_pred)
         return accuracy
 
 
 
-def evaluate(args): #pragma: no cover
+def tf_evaluate(args): #pragma: no cover
     """
         Function used to deploy a new process to train a candidate solution.
         Each candidate solution is trained in a separe process to avoid memory problems.
@@ -640,374 +546,13 @@ def evaluate(args): #pragma: no cover
     gpus = tf.config.experimental.list_physical_devices('GPU')
     tf.config.experimental.set_memory_growth(gpus[0], True)
 
-    cnn_eval, phenotype, load_prev_weights, weights_save_path, parent_weights_path, train_time, num_epochs, datagen, datagen_test = args
+    cnn_eval, phenotype, load_prev_weights, weights_save_path, parent_weights_path, train_time, num_epochs, = args
 
     try:
-        return cnn_eval.evaluate(phenotype, load_prev_weights, weights_save_path, parent_weights_path, train_time, num_epochs, datagen, datagen_test)
+        return cnn_eval.evaluate(phenotype, load_prev_weights, weights_save_path, parent_weights_path, train_time, num_epochs)
     except tf.errors.ResourceExhaustedError as e:
         keras.backend.clear_session()
         return None
     except TypeError as e2:
         keras.backend.clear_session()
         return None
-
-
-class Module:
-    """
-        Each of the units of the outer-level genotype
-
-
-        Attributes
-        ----------
-        module : str
-            non-terminal symbol
-
-        min_expansions : int
-            minimum expansions of the block
-
-        max_expansions : int
-            maximum expansions of the block
-
-        levels_back : dict
-            number of previous layers a given layer can receive as input
-
-        layers : list
-            list of layers of the module
-
-        connections : dict
-            list of connetions of each layer
-
-
-        Methods
-        -------
-            initialise(grammar, reuse)
-                Randomly creates a module
-    """
-
-    def __init__(self, module, min_expansions, max_expansions, levels_back, min_expansins):
-        """
-            Parameters
-            ----------
-            module : str
-                non-terminal symbol
-
-            min_expansions : int
-                minimum expansions of the block
-        
-            max_expansions : int
-                maximum expansions of the block
-
-            levels_back : dict
-                number of previous layers a given layer can receive as input
-        """
-
-        self.module = module
-        self.min_expansions = min_expansins
-        self.max_expansions = max_expansions
-        self.levels_back = levels_back
-        self.layers = []
-        self.connections = {}
-
-    def initialise(self, grammar, reuse, init_max):
-        """
-            Randomly creates a module
-
-            Parameters
-            ----------
-            grammar : Grammar
-                grammar instace that stores the expansion rules
-
-            reuse : float
-                likelihood of reusing an existing layer
-
-            Returns
-            -------
-            score_history : dict
-                training data: loss and accuracy
-        """
-
-        num_expansions = random.choice(init_max[self.module])
-
-        #Initialise layers
-        for idx in range(num_expansions):
-            if idx>0 and random.random() <= reuse:
-                r_idx = random.randint(0, idx-1)
-                self.layers.append(self.layers[r_idx])
-            else:
-                self.layers.append(grammar.initialise(self.module))
-
-        #Initialise connections: feed-forward and allowing skip-connections
-        self.connections = {}
-        for layer_idx in range(num_expansions):
-            if layer_idx == 0:
-                #the -1 layer is the input
-                self.connections[layer_idx] = [-1,]
-            else:
-                connection_possibilities = list(range(max(0, layer_idx-self.levels_back), layer_idx-1))
-                if len(connection_possibilities) < self.levels_back-1:
-                    connection_possibilities.append(-1)
-
-                sample_size = random.randint(0, len(connection_possibilities))
-                
-                self.connections[layer_idx] = [layer_idx-1] 
-                if sample_size > 0:
-                    self.connections[layer_idx] += random.sample(connection_possibilities, sample_size)
-
-
-
-class Individual:
-    """
-        Candidate solution.
-
-
-        Attributes
-        ----------
-        network_structure : list
-            ordered list of tuples formated as follows 
-            [(non-terminal, min_expansions, max_expansions), ...]
-
-        output_rule : str
-            output non-terminal symbol
-
-        macro_rules : list
-            list of non-terminals (str) with the marco rules (e.g., learning)
-
-        modules : list
-            list of Modules (genotype) of the layers
-
-        output : dict
-            output rule genotype
-
-        macro : list
-            list of Modules (genotype) for the macro rules
-
-        phenotype : str
-            phenotype of the candidate solution
-
-        fitness : float
-            fitness value of the candidate solution
-
-        metrics : dict
-            training metrics
-
-        num_epochs : int
-            number of performed epochs during training
-
-        trainable_parameters : int
-            number of trainable parameters of the network
-
-        time : float
-            network training time
-
-        current_time : float
-            performed network training time
-
-        train_time : float
-            maximum training time
-
-        id : int
-            individual unique identifier
-
-
-        Methods
-        -------
-            initialise(grammar, levels_back, reuse)
-                Randomly creates a candidate solution
-
-            decode(grammar)
-                Maps the genotype to the phenotype
-
-            evaluate(grammar, cnn_eval, weights_save_path, parent_weights_path='')
-                Performs the evaluation of a candidate solution
-    """
-
-
-    def __init__(self, network_structure, macro_rules, output_rule, ind_id):
-        """
-            Parameters
-            ----------
-            network_structure : list
-                ordered list of tuples formated as follows 
-                [(non-terminal, min_expansions, max_expansions), ...]
-
-            macro_rules : list
-                list of non-terminals (str) with the marco rules (e.g., learning)
-
-            output_rule : str
-                output non-terminal symbol
-
-            ind_id : int
-                individual unique identifier
-        """
-
-
-        self.network_structure = network_structure
-        self.output_rule = output_rule
-        self.macro_rules = macro_rules
-        self.modules = []
-        self.output = None
-        self.macro = []
-        self.phenotype = None
-        self.fitness = None
-        self.metrics = None
-        self.num_epochs = 0
-        self.trainable_parameters = None
-        self.time = None
-        self.current_time = 0
-        self.train_time = 0
-        self.id = ind_id
-
-    def initialise(self, grammar, levels_back, reuse, init_max):
-        """
-            Randomly creates a candidate solution
-
-            Parameters
-            ----------
-            grammar : Grammar
-                grammar instaces that stores the expansion rules
-
-            levels_back : dict
-                number of previous layers a given layer can receive as input
-
-            reuse : float
-                likelihood of reusing an existing layer
-
-            Returns
-            -------
-            candidate_solution : Individual
-                randomly created candidate solution
-        """
-
-        for non_terminal, min_expansions, max_expansions in self.network_structure:
-            new_module = Module(non_terminal, min_expansions, max_expansions, levels_back[non_terminal], min_expansions)
-            new_module.initialise(grammar, reuse, init_max)
-
-            self.modules.append(new_module)
-
-        #Initialise output
-        self.output = grammar.initialise(self.output_rule)
-
-        # Initialise the macro structure: learning, data augmentation, etc.
-        for rule in self.macro_rules:
-            self.macro.append(grammar.initialise(rule))
-
-        return self
-
-
-    def decode(self, grammar):
-        """
-            Maps the genotype to the phenotype
-
-            Parameters
-            ----------
-            grammar : Grammar
-                grammar instaces that stores the expansion rules
-
-            Returns
-            -------
-            phenotype : str
-                phenotype of the individual to be used in the mapping to the keras model.
-        """
-
-        phenotype = ''
-        offset = 0
-        layer_counter = 0
-        for module in self.modules:
-            offset = layer_counter
-            for layer_idx, layer_genotype in enumerate(module.layers):
-                layer_counter += 1
-                phenotype += ' ' + grammar.decode(module.module, layer_genotype)+ ' input:'+",".join(map(str, np.array(module.connections[layer_idx])+offset))
-
-        phenotype += ' '+grammar.decode(self.output_rule, self.output)+' input:'+str(layer_counter-1)
-
-        for rule_idx, macro_rule in enumerate(self.macro_rules):
-            phenotype += ' '+grammar.decode(macro_rule, self.macro[rule_idx])
-
-        self.phenotype = phenotype.rstrip().lstrip()
-        return self.phenotype
-
-
-    def evaluate(self, grammar, cnn_eval, datagen, datagen_test, weights_save_path, parent_weights_path=''): #pragma: no cover
-        """
-            Performs the evaluation of a candidate solution
-
-            Parameters
-            ----------
-            grammar : Grammar
-                grammar instaces that stores the expansion rules
-
-            cnn_eval : Evaluator
-                Evaluator instance used to train the networks
-
-            datagen : keras.preprocessing.image.ImageDataGenerator
-                Data augmentation method image data generator
-        
-            weights_save_path : str
-                path where to save the model weights after training
-
-            parent_weights_path : str
-                path to the weights of the previous training
-
-
-            Returns
-            -------
-            fitness : float
-                quality of the candidate solutions
-        """
-
-        phenotype = self.decode(grammar)
-        start = time()
-
-        load_prev_weights = True
-        if self.current_time == 0:
-            load_prev_weights = False
-
-        train_time = self.train_time - self.current_time
-
-        num_pool_workers=1 
-        with contextlib.closing(Pool(num_pool_workers)) as po: 
-            pool_results = po.map_async(evaluate, [(cnn_eval, phenotype, load_prev_weights,\
-                            weights_save_path, parent_weights_path,\
-                            train_time, self.num_epochs, datagen, datagen_test)])
-            metrics = pool_results.get()[0]
-
-
-        if metrics is not None:
-            if 'val_accuracy' in metrics:
-                if type(metrics['val_accuracy']) is list:
-                    metrics['val_accuracy'] = [i for i in metrics['val_accuracy']]
-                else:
-                    metrics['val_accuracy'] = [i.item() for i in metrics['val_accuracy']]
-            if 'loss' in metrics:
-                if type(metrics['loss']) is list:
-                    metrics['loss'] = [i for i in metrics['loss']]
-                else:
-                    metrics['loss'] = [i.item() for i in metrics['loss']]
-            if 'accuracy' in metrics:
-                if type(metrics['accuracy']) is list:
-                    metrics['accuracy'] = [i for i in metrics['accuracy']]
-                else:
-                    metrics['accuracy'] = [i.item() for i in metrics['accuracy']]
-            self.metrics = metrics
-            if 'accuracy_test' in metrics:
-                if type(self.metrics['accuracy_test']) is float:
-                    self.fitness = self.metrics['accuracy_test']
-                else:
-                    self.fitness = self.metrics['accuracy_test'].item()
-            if 'val_accuracy' in metrics:
-                self.num_epochs += len(self.metrics['val_accuracy'])
-            else:
-                self.num_epochs += 1
-            self.trainable_parameters = self.metrics['trainable_parameters']
-            self.current_time += (self.train_time-self.current_time)
-        else:
-            self.metrics = None
-            self.fitness = -1
-            self.num_epochs = 0
-            self.trainable_parameters = -1
-            self.current_time = 0
-
-        self.time = time() - start
-
-        return self.fitness
-
