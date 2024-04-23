@@ -57,4 +57,4 @@ setup:
     800, 900, 1000, 1100, 1200, 1300, 1400]
   
   # place where the experiment is saved
-  save_path: ./experiments/  
+  save_path: ./experiments/

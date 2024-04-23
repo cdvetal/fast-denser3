@@ -35,7 +35,7 @@ from .grammar import Grammar
 from .individual import Individual
 from .utilities import fitness_metrics
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def select_fittest(population, population_fits, grammar, cnn_eval, gen,
@@ -583,7 +583,7 @@ def main(run, dataset, config_file, grammar_path):
                 pickle.dump(parent, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         print(f'[{run}] Best fitness of generation {gen}: '
-              '{max(population_fits)}')
+              f'{max(population_fits)}')
         print(f'[{run}] Best overall fitness: {best_fitness}')
 
         # save population

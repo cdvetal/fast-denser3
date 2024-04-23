@@ -175,7 +175,7 @@ class Individual:
             offset = layer_counter
             for layer_idx, layer_genotype in enumerate(module.layers):
                 layer_counter += 1
-                phenotype += ' ' + \
+                phenotype += ' ' \
                     + grammar.decode(module.module, layer_genotype) \
                     + ' input:' \
                     + ",".join(map(str, np.array(module.connections[layer_idx])
