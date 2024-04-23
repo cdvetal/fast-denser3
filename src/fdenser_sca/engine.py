@@ -17,22 +17,21 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from sys import argv
 import random
-import numpy as np
-from .grammar import Grammar
-from .utils import Evaluator, Individual
 from copy import deepcopy
 from os import makedirs
 import pickle
-import os
 from shutil import copyfile
 from glob import glob
 import json
-import .utilities.fitness_metrics as fitness_metrics
-from jsmin import jsmin
-from .utilities.data_augmentation import augmentation
 from pathlib import Path
 
 import yaml
+import numpy as np
+
+from .evaluator import Evaluator
+from .grammar import Grammar
+from .individual import Individual
+from .utilities import fitness_metrics
 
 
 def save_pop(population, run_path, gen):
@@ -238,7 +237,7 @@ def unpickle_population(run_path):
         with open(Path(f'{run_path}/numpy.pkl'), 'rb') as handle_numpy:
             pickle_numpy = pickle.load(handle_numpy)
 
-        total_epochs = get_total_epochs(save_path, run, last_generation)
+        total_epochs = get_total_epochs(run_path, last_generation)
 
         return last_generation, pickle_evaluator, pickle_population, pickle_parent, \
                pickle_population_fitness, pickle_random, pickle_numpy, total_epochs
@@ -581,8 +580,8 @@ def load_config(config_file):
     elif config['evolutionary']['fitness_metric'] == 'mse':
         config['evolutionary']['fitness_function'] = fitness_metrics.mse
     else:
-        raise ValueError(f'Invalid fitness metric in config file: 
-            {config['evolutionary']['fitness_metric']}')
+        raise ValueError('Invalid fitness metric in config file: '
+            f'{config["evolutionary"]["fitness_metric"]}')
 
     return config
 
@@ -659,10 +658,20 @@ def main(run, dataset, config_file, grammar_path): #pragma: no cover
             print('[%d] Performing generation: %d' % (run, gen))
             
             #create initial population
-            population = [Individual(config["network"]["network_structure"], config["network"]["macro_structure"],\
-                          config["network"]["output"], _id_).initialise(grammar, config["network"]["levels_back"],\
-                          config["evolutionary"]["mutations"]["reuse_layer"], config["network"]["network_structure_init"]) \
-                          for _id_ in range(config["evolutionary"]["lambda"])]
+            population = [
+                Individual(
+                    config["network"]["network_structure"],
+                    config["network"]["macro_structure"],
+                    config["network"]["output"],
+                    _id_,
+                ).initialise(
+                    grammar,
+                    config["network"]["levels_back"],
+                    config["evolutionary"]["mutations"]["reuse_layer"],
+                    config["network"]["network_structure_init"],
+                )
+                for _id_ in range(config["evolutionary"]["lambda"])
+            ]
 
             #set initial population variables and evaluate population
             population_fits = []
@@ -725,7 +734,7 @@ def main(run, dataset, config_file, grammar_path): #pragma: no cover
             best_fitness = parent.fitness
 
             if os.path.isfile(Path(run_path, f'best_{gen}_{parent.id}.hdf5')):
-                copyfile(Path(run_path, f'best_{gen}_{parent.id}.hdf5'), Path(f'best.hdf5'))
+                copyfile(Path(run_path, f'best_{gen}_{parent.id}.hdf5'), Path(run_path, 'best.hdf5'))
 
             with open(Path(run_path, 'best_parent.pkl'), 'wb') as handle:
                 pickle.dump(parent, handle, protocol=pickle.HIGHEST_PROTOCOL)

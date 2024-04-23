@@ -8,8 +8,8 @@ evolutionary:
   # maximum of epochs to perform. Evolution is halted when the current number of epochs surpasses this value
   max_epochs: 1000
 
-  # maximum training time for each network (in seconds)
-  default_train_time: 600
+  # maximum training time for each network (in seconds) - 2min for this SHORT config
+  default_train_time: 20
 
   # fitness assignment metric
   fitness_metric: accuracy

@@ -1,3 +1,6 @@
+import random
+
+
 class Module:
     """
         Each of the units of the outer-level genotype

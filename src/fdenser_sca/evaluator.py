@@ -13,14 +13,12 @@
 # limitations under the License.
 
 
-import random
-from keras import backend
-import tensorflow as tf
-import numpy as np
+import keras
 from keras.callbacks import ModelCheckpoint
 import os
+
+from .timed_stopping import TimedStopping
 from .utilities.data import load_dataset
-import contextlib
 
 #TODO: future -- impose memory constraints 
 # tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=50)])
@@ -503,56 +501,3 @@ class Evaluator:
 
         accuracy = self.fitness_metric(self.dataset['y_test'], y_pred)
         return accuracy
-
-
-
-def tf_evaluate(args): #pragma: no cover
-    """
-        Function used to deploy a new process to train a candidate solution.
-        Each candidate solution is trained in a separe process to avoid memory problems.
-
-        Parameters
-        ----------
-        args : tuple
-            cnn_eval : Evaluator
-                network evaluator
-
-            phenotype : str
-                individual phenotype
-
-            load_prev_weights : bool
-                resume training from a previous train or not
-
-            weights_save_path : str
-                path where to save the model weights after training
-
-            parent_weights_path : str
-                path to the weights of the previous training
-
-            train_time : float
-                maximum training time
-
-            num_epochs : int
-                maximum number of epochs
-
-        Returns
-        -------
-        score_history : dict
-            training data: loss and accuracy
-    """
-
-    import tensorflow as tf
-
-    gpus = tf.config.experimental.list_physical_devices('GPU')
-    tf.config.experimental.set_memory_growth(gpus[0], True)
-
-    cnn_eval, phenotype, load_prev_weights, weights_save_path, parent_weights_path, train_time, num_epochs, = args
-
-    try:
-        return cnn_eval.evaluate(phenotype, load_prev_weights, weights_save_path, parent_weights_path, train_time, num_epochs)
-    except tf.errors.ResourceExhaustedError as e:
-        keras.backend.clear_session()
-        return None
-    except TypeError as e2:
-        keras.backend.clear_session()
-        return None
