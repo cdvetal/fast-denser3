@@ -17,6 +17,7 @@ import scipy.io
 import numpy as np
 import sys
 
+
 def load_mat(path):
     """
         Load SVHN mat files
@@ -43,6 +44,7 @@ def load_mat(path):
 
     return x, y
 
+
 def load_svhn(dataset_path):
     """
         Load the SVHN dataset
@@ -57,7 +59,7 @@ def load_svhn(dataset_path):
         x_train : np.array
             training instances
         y_train : np.array
-            training labels 
+            training labels
         x_test : np.array
             testing instances
         x_test : np.array
@@ -65,12 +67,10 @@ def load_svhn(dataset_path):
     """
 
     try:
-       x_train, y_train = load_mat('%s/train_32x32.mat' % dataset_path)
-       x_test, y_test = load_mat('%s/test_32x32.mat' % dataset_path)
+        x_train, y_train = load_mat('%s/train_32x32.mat' % dataset_path)
+        x_test, y_test = load_mat('%s/test_32x32.mat' % dataset_path)
     except FileNotFoundError:
-       print("Error: you need to download the SVHN files first.")
-       sys.exit(-1)
+        print("Error: you need to download the SVHN files first.")
+        sys.exit(-1)
 
     return x_train, y_train, x_test, y_test
-
-

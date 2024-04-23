@@ -23,9 +23,11 @@ import tensorflow as tf
 import contextlib
 import sys
 
-#dataset paths - change if the path is different
+
+# dataset paths - change if the path is different
 SVHN = 'fast_denser/utilities/datasets/data/svhn'
 TINY_IMAGENET = 'fast_denser/utilities/datasets/data/tiny-imagenet-200'
+
 
 def prepare_data(x_train, y_train, x_test, y_test, n_classes=10):
     """
@@ -36,7 +38,7 @@ def prepare_data(x_train, y_train, x_test, y_test, n_classes=10):
         x_train : np.array
             training instances
         y_train : np.array
-            training labels 
+            training labels
         x_test : np.array
             testing instances
         x_test : np.array
@@ -54,10 +56,9 @@ def prepare_data(x_train, y_train, x_test, y_test, n_classes=10):
                     - evo_x_test and evo_y_test : testing x, and y instances
                                                   used for fitness assessment
                 After evolution:
-                    - x_test and y_test : for measusing the effectiveness of the model
-                                          on unseen data
+                    - x_test and y_test : for measusing the effectiveness of
+                                          the model on unseen data
     """
-
 
     x_train = x_train.astype('float32')
     x_test = x_test.astype('float32')
@@ -65,14 +66,11 @@ def prepare_data(x_train, y_train, x_test, y_test, n_classes=10):
     x_train = x_train.reshape((-1, 32, 32, 3))
     x_test = x_test.reshape((-1, 32, 32, 3))
 
-    evo_x_train, x_val, evo_y_train, y_val = train_test_split(x_train, y_train,
-                                                              test_size = 7000,
-                                                              stratify = y_train)
+    evo_x_train, x_val, evo_y_train, y_val = train_test_split(
+        x_train, y_train, test_size=7000, stratify=y_train)
 
-    evo_x_val, evo_x_test, evo_y_val, evo_y_test = train_test_split(x_val, y_val,
-                                                                    test_size = 3500,
-                                                                    stratify = y_val)
-
+    evo_x_val, evo_x_test, evo_y_val, evo_y_test = train_test_split(
+        x_val, y_val, test_size=3500, stratify=y_val)
 
     evo_y_train = keras.utils.to_categorical(evo_y_train, n_classes)
     evo_y_val = keras.utils.to_categorical(evo_y_val, n_classes)
@@ -85,7 +83,6 @@ def prepare_data(x_train, y_train, x_test, y_test, n_classes=10):
     }
 
     return dataset
-
 
 
 def resize_data(args):
@@ -103,21 +100,19 @@ def resize_data(args):
             reshaped instances
     """
 
-    import tensorflow as tf
-
     content, shape = args
     content = content.reshape(-1, 28, 28, 1)
 
     if shape != (28, 28):
-        content = tf.image.resize(content, shape, tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-    
+        content = tf.image.resize(
+            content, shape, tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+
     content = tf.image.grayscale_to_rgb(tf.constant(content))
-    
+
     return content.numpy()
 
 
-
-def load_dataset(dataset, shape=(32,32)):
+def load_dataset(dataset, shape=(32, 32)):
     """
         Load a specific dataset
 
@@ -140,24 +135,24 @@ def load_dataset(dataset, shape=(32,32)):
                     - evo_x_test and evo_y_test : testing x, and y instances
                                                   used for fitness assessment
                 After evolution:
-                    - x_test and y_test : for measusing the effectiveness of the model
-                                          on unseen data
+                    - x_test and y_test : for measusing the effectiveness of
+                                          the model on unseen data
     """
 
-
     if dataset == 'fashion-mnist':
-        (x_train, y_train), (x_test, y_test) = keras.datasets.fashion_mnist.load_data()
+        (x_train, y_train), (x_test, y_test) = \
+            keras.datasets.fashion_mnist.load_data()
         n_classes = 10
 
         x_train = 255-x_train
         x_test = 255-x_test
 
-        num_pool_workers=1 
-        with contextlib.closing(Pool(num_pool_workers)) as po: 
+        num_pool_workers = 1
+        with contextlib.closing(Pool(num_pool_workers)) as po:
             pool_results = po.map_async(resize_data, [(x_train, shape)])
             x_train = pool_results.get()[0]
 
-        with contextlib.closing(Pool(num_pool_workers)) as po: 
+        with contextlib.closing(Pool(num_pool_workers)) as po:
             pool_results = po.map_async(resize_data, [(x_test, shape)])
             x_test = pool_results.get()[0]
 
@@ -165,26 +160,26 @@ def load_dataset(dataset, shape=(32,32)):
         (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
         n_classes = 10
 
-        num_pool_workers=1 
-        with contextlib.closing(Pool(num_pool_workers)) as po: 
+        num_pool_workers = 1
+        with contextlib.closing(Pool(num_pool_workers)) as po:
             pool_results = po.map_async(resize_data, [(x_train, shape)])
             x_train = pool_results.get()[0]
 
-        with contextlib.closing(Pool(num_pool_workers)) as po: 
+        with contextlib.closing(Pool(num_pool_workers)) as po:
             pool_results = po.map_async(resize_data, [(x_test, shape)])
             x_test = pool_results.get()[0]
-        
-    #255, unbalanced
+
+    # 255, unbalanced
     elif dataset == 'svhn':
         x_train, y_train, x_test, y_test = load_svhn(SVHN)
         n_classes = 10
 
-    #255, 50000, 10000
+    # 255, 50000, 10000
     elif dataset == 'cifar10':
         x_train, y_train, x_test, y_test = load_cifar(10)
         n_classes = 10
 
-    #255, 50000, 10000
+    # 255, 50000, 10000
     elif dataset == 'cifar100-fine':
         x_train, y_train, x_test, y_test = load_cifar(100, 'fine')
         n_classes = 100
@@ -194,13 +189,13 @@ def load_dataset(dataset, shape=(32,32)):
         n_classes = 20
 
     elif dataset == 'tiny-imagenet':
-        x_train, y_train, x_test, y_test = load_tiny_imagenet(TINY_IMAGENET, shape)
+        x_train, y_train, x_test, y_test = \
+            load_tiny_imagenet(TINY_IMAGENET, shape)
         n_classes = 200
 
     else:
         print('Error: the dataset is not valid')
         sys.exit(-1)
-
 
     dataset = prepare_data(x_train, y_train, x_test, y_test, n_classes)
 

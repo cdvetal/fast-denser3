@@ -16,7 +16,7 @@ class Individual:
         Attributes
         ----------
         network_structure : list
-            ordered list of tuples formated as follows 
+            ordered list of tuples formated as follows
             [(non-terminal, min_expansions, max_expansions), ...]
 
         output_rule : str
@@ -70,21 +70,22 @@ class Individual:
             decode(grammar)
                 Maps the genotype to the phenotype
 
-            evaluate(grammar, cnn_eval, weights_save_path, parent_weights_path='')
+            evaluate(grammar, cnn_eval, weights_save_path,
+                     parent_weights_path='')
                 Performs the evaluation of a candidate solution
     """
-
 
     def __init__(self, network_structure, macro_rules, output_rule, ind_id):
         """
             Parameters
             ----------
             network_structure : list
-                ordered list of tuples formated as follows 
+                ordered list of tuples formated as follows
                 [(non-terminal, min_expansions, max_expansions), ...]
 
             macro_rules : list
-                list of non-terminals (str) with the marco rules (e.g., learning)
+                list of non-terminals (str) with the marco rules
+                (e.g., learning)
 
             output_rule : str
                 output non-terminal symbol
@@ -92,7 +93,6 @@ class Individual:
             ind_id : int
                 individual unique identifier
         """
-
 
         self.network_structure = network_structure
         self.output_rule = output_rule
@@ -132,12 +132,18 @@ class Individual:
         """
 
         for non_terminal, min_expansions, max_expansions in self.network_structure:
-            new_module = Module(non_terminal, min_expansions, max_expansions, levels_back[non_terminal], min_expansions)
+            new_module = Module(
+                non_terminal,
+                min_expansions,
+                max_expansions,
+                levels_back[non_terminal],
+                min_expansions
+            )
             new_module.initialise(grammar, reuse, init_max)
 
             self.modules.append(new_module)
 
-        #Initialise output
+        # Initialise output
         self.output = grammar.initialise(self.output_rule)
 
         # Initialise the macro structure: learning, data augmentation, etc.
@@ -145,7 +151,6 @@ class Individual:
             self.macro.append(grammar.initialise(rule))
 
         return self
-
 
     def decode(self, grammar):
         """
@@ -159,7 +164,8 @@ class Individual:
             Returns
             -------
             phenotype : str
-                phenotype of the individual to be used in the mapping to the keras model.
+                phenotype of the individual to be used in the mapping to the
+                keras model.
         """
 
         phenotype = ''
@@ -169,9 +175,14 @@ class Individual:
             offset = layer_counter
             for layer_idx, layer_genotype in enumerate(module.layers):
                 layer_counter += 1
-                phenotype += ' ' + grammar.decode(module.module, layer_genotype)+ ' input:'+",".join(map(str, np.array(module.connections[layer_idx])+offset))
+                phenotype += ' ' + \
+                    + grammar.decode(module.module, layer_genotype) \
+                    + ' input:' \
+                    + ",".join(map(str, np.array(module.connections[layer_idx])
+                               + offset))
 
-        phenotype += ' '+grammar.decode(self.output_rule, self.output)+' input:'+str(layer_counter-1)
+        phenotype += ' ' + grammar.decode(self.output_rule, self.output) \
+            + ' input:' + str(layer_counter-1)
 
         for rule_idx, macro_rule in enumerate(self.macro_rules):
             phenotype += ' '+grammar.decode(macro_rule, self.macro[rule_idx])
@@ -179,8 +190,8 @@ class Individual:
         self.phenotype = phenotype.rstrip().lstrip()
         return self.phenotype
 
-
-    def evaluate(self, grammar, cnn_eval, weights_save_path, parent_weights_path=''): #pragma: no cover
+    def evaluate(self, grammar, cnn_eval, weights_save_path,
+                 parent_weights_path=''):
         """
             Performs the evaluation of a candidate solution
 
@@ -194,7 +205,7 @@ class Individual:
 
             datagen : keras.preprocessing.image.ImageDataGenerator
                 Data augmentation method image data generator
-        
+
             weights_save_path : str
                 path where to save the model weights after training
 
@@ -217,23 +228,26 @@ class Individual:
 
         train_time = self.train_time - self.current_time
 
-        num_pool_workers=1 
-        with contextlib.closing(Pool(num_pool_workers)) as po: 
+        num_pool_workers = 1
+        with contextlib.closing(Pool(num_pool_workers)) as po:
             pool_results = po.map_async(
                 tf_evaluate,
-                [(cnn_eval, phenotype, load_prev_weights,\
-                            weights_save_path, parent_weights_path,\
-                            train_time, self.num_epochs)]
+                [(cnn_eval, phenotype, load_prev_weights,
+                  weights_save_path, parent_weights_path,
+                  train_time, self.num_epochs)]
             )
             metrics = pool_results.get()[0]
-
 
         if metrics is not None:
             if 'val_accuracy' in metrics:
                 if type(metrics['val_accuracy']) is list:
-                    metrics['val_accuracy'] = [i for i in metrics['val_accuracy']]
+                    metrics['val_accuracy'] = [
+                        i for i in metrics['val_accuracy']
+                    ]
                 else:
-                    metrics['val_accuracy'] = [i.item() for i in metrics['val_accuracy']]
+                    metrics['val_accuracy'] = [
+                        i.item() for i in metrics['val_accuracy']
+                    ]
             if 'loss' in metrics:
                 if type(metrics['loss']) is list:
                     metrics['loss'] = [i for i in metrics['loss']]
@@ -243,7 +257,9 @@ class Individual:
                 if type(metrics['accuracy']) is list:
                     metrics['accuracy'] = [i for i in metrics['accuracy']]
                 else:
-                    metrics['accuracy'] = [i.item() for i in metrics['accuracy']]
+                    metrics['accuracy'] = [
+                        i.item() for i in metrics['accuracy']
+                    ]
             self.metrics = metrics
             if 'accuracy_test' in metrics:
                 if type(self.metrics['accuracy_test']) is float:
@@ -267,10 +283,12 @@ class Individual:
 
         return self.fitness
 
-def tf_evaluate(args): #pragma: no cover
+
+def tf_evaluate(args):
     """
         Function used to deploy a new process to train a candidate solution.
-        Each candidate solution is trained in a separe process to avoid memory problems.
+        Each candidate solution is trained in a separe process to avoid
+        memory problems.
 
         Parameters
         ----------
@@ -304,17 +322,24 @@ def tf_evaluate(args): #pragma: no cover
 
     import tensorflow as tf
 
-
     gpus = tf.config.experimental.list_physical_devices('GPU')
     tf.config.experimental.set_memory_growth(gpus[0], True)
 
-    cnn_eval, phenotype, load_prev_weights, weights_save_path, parent_weights_path, train_time, num_epochs, = args
+    cnn_eval, phenotype, load_prev_weights, weights_save_path, \
+        parent_weights_path, train_time, num_epochs, = args
 
     try:
-        return cnn_eval.evaluate(phenotype, load_prev_weights, weights_save_path, parent_weights_path, train_time, num_epochs)
-    except tf.errors.ResourceExhaustedError as e:
+        return cnn_eval.evaluate(
+            phenotype,
+            load_prev_weights,
+            weights_save_path,
+            parent_weights_path,
+            train_time,
+            num_epochs
+        )
+    except tf.errors.ResourceExhaustedError:
         keras.backend.clear_session()
         return None
-    except TypeError as e2:
+    except TypeError:
         keras.backend.clear_session()
         return None

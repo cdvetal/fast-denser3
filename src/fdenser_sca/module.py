@@ -33,7 +33,8 @@ class Module:
                 Randomly creates a module
     """
 
-    def __init__(self, module, min_expansions, max_expansions, levels_back, min_expansins):
+    def __init__(self, module, min_expansions, max_expansions,
+                 levels_back, min_expansins):
         """
             Parameters
             ----------
@@ -42,7 +43,7 @@ class Module:
 
             min_expansions : int
                 minimum expansions of the block
-        
+
             max_expansions : int
                 maximum expansions of the block
 
@@ -77,27 +78,31 @@ class Module:
 
         num_expansions = random.choice(init_max[self.module])
 
-        #Initialise layers
+        # Initialise layers
         for idx in range(num_expansions):
-            if idx>0 and random.random() <= reuse:
+            if idx > 0 and random.random() <= reuse:
                 r_idx = random.randint(0, idx-1)
                 self.layers.append(self.layers[r_idx])
             else:
                 self.layers.append(grammar.initialise(self.module))
 
-        #Initialise connections: feed-forward and allowing skip-connections
+        # Initialise connections: feed-forward and allowing skip-connections
         self.connections = {}
         for layer_idx in range(num_expansions):
             if layer_idx == 0:
-                #the -1 layer is the input
+                # the -1 layer is the input
                 self.connections[layer_idx] = [-1,]
             else:
-                connection_possibilities = list(range(max(0, layer_idx-self.levels_back), layer_idx-1))
+                connection_possibilities = list(
+                    range(max(0, layer_idx-self.levels_back), layer_idx-1)
+                )
                 if len(connection_possibilities) < self.levels_back-1:
                     connection_possibilities.append(-1)
 
                 sample_size = random.randint(0, len(connection_possibilities))
-                
-                self.connections[layer_idx] = [layer_idx-1] 
+
+                self.connections[layer_idx] = [layer_idx-1]
                 if sample_size > 0:
-                    self.connections[layer_idx] += random.sample(connection_possibilities, sample_size)
+                    self.connections[layer_idx] += random.sample(
+                        connection_possibilities, sample_size
+                    )

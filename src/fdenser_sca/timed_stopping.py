@@ -13,11 +13,11 @@ class TimedStopping(keras.callbacks.Callback):
         ----------
         start_time : float
             time when the training started
-        
-        seconds : float 
+
+        seconds : float
             maximum time before stopping.
-        
-        verbose : bool 
+
+        verbose : bool
             verbosity mode.
 
 
@@ -46,7 +46,6 @@ class TimedStopping(keras.callbacks.Callback):
         self.start_time = 0
         self.seconds = seconds
         self.verbose = verbose
-
 
     def on_train_begin(self, logs={}):
         """

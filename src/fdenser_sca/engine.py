@@ -13,17 +13,15 @@
 # limitations under the License.
 
 
-import os 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-from sys import argv
+import json
+import os
+import pickle
 import random
 from copy import deepcopy
-from os import makedirs
-import pickle
-from shutil import copyfile
 from glob import glob
-import json
+from os import makedirs
 from pathlib import Path
+from shutil import copyfile
 
 import yaml
 import numpy as np
@@ -32,6 +30,8 @@ from .evaluator import Evaluator
 from .grammar import Grammar
 from .individual import Individual
 from .utilities import fitness_metrics
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def save_pop(population, run_path, gen):
@@ -45,7 +45,8 @@ def save_pop(population, run_path, gen):
             .trainable_parameters: number of network trainable parameters
             .num_epochs: number of performed training epochs
             .time: time (sec) the network took to perform num_epochs
-            .train_time: maximum time (sec) that the network is allowed to train for
+            .train_time: maximum time (sec) that the network is allowed to
+                         train for
 
 
 
@@ -135,10 +136,15 @@ def pickle_population(population, parent, run_path):
         pickle.dump(parent, handle_pop, protocol=pickle.HIGHEST_PROTOCOL)
 
     with open(Path(f'{run_path}/random.pkl'), 'wb') as handle_random:
-        pickle.dump(random.getstate(), handle_random, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(
+            random.getstate(), handle_random, protocol=pickle.HIGHEST_PROTOCOL)
 
     with open(Path(f'{run_path}/numpy.pkl'), 'wb') as handle_numpy:
-        pickle.dump(np.random.get_state(), handle_numpy, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(
+            np.random.get_state(),
+            handle_numpy,
+            protocol=pickle.HIGHEST_PROTOCOL,
+        )
 
 
 def get_total_epochs(run_path, last_gen):
@@ -195,8 +201,8 @@ def unpickle_population(run_path):
             idx of the last performed generation
 
         pickle_evaluator : Evaluator
-            instance of the Evaluator class used for evaluating the individuals.
-            Loaded because it has the data used for training.
+            instance of the Evaluator class used for evaluating the
+            individuals. Loaded because it has the data used for training.
 
         pickle_population : list
             population of the last performed generation
@@ -214,10 +220,13 @@ def unpickle_population(run_path):
             Numpy random state
     """
 
-    csvs = glob(str(Path(run_path, '*.json' )))
-    
+    csvs = glob(str(Path(run_path, '*.json')))
+
     if csvs:
-        csvs = [int(csv.split(os.sep)[-1].replace('gen_','').replace('.json','')) for csv in csvs]
+        csvs = [
+            int(csv.split(os.sep)[-1].replace('gen_', '').replace('.json', ''))
+            for csv in csvs
+        ]
         last_generation = max(csvs)
 
         with open(Path(f'{run_path}/evaluator.pkl'), 'rb') as handle_eval:
@@ -239,14 +248,16 @@ def unpickle_population(run_path):
 
         total_epochs = get_total_epochs(run_path, last_generation)
 
-        return last_generation, pickle_evaluator, pickle_population, pickle_parent, \
-               pickle_population_fitness, pickle_random, pickle_numpy, total_epochs
+        return last_generation, pickle_evaluator, pickle_population, \
+            pickle_parent, pickle_population_fitness, pickle_random, \
+            pickle_numpy, total_epochs
 
     else:
         return None
 
 
-def select_fittest(population, population_fits, grammar, cnn_eval, gen, run_path, default_train_time): #pragma: no cover
+def select_fittest(population, population_fits, grammar, cnn_eval, gen,
+                   run_path, default_train_time):
     """
         Select the parent to seed the next generation.
 
@@ -260,8 +271,8 @@ def select_fittest(population, population_fits, grammar, cnn_eval, gen, run_path
             ordered list of fitnesses of the population of individuals
 
         grammar : Grammar
-            Grammar instance, used to perform the initialisation and the genotype
-            to phenotype mapping
+            Grammar instance, used to perform the initialisation and the
+            genotype to phenotype mapping
 
         cnn_eval : Evaluator
             Evaluator instance used to train the networks
@@ -270,7 +281,8 @@ def select_fittest(population, population_fits, grammar, cnn_eval, gen, run_path
             Data augmentation method image data generator for the training data
 
         datagen_test : keras.preprocessing.image.ImageDataGenerator
-            Data augmentation method image data generator for the validation and test data
+            Data augmentation method image data generator for the validation
+            and test data
 
         gen : int
             current generation of the ES
@@ -288,29 +300,37 @@ def select_fittest(population, population_fits, grammar, cnn_eval, gen, run_path
             individual that seeds the next generation
     """
 
-
-    #Get best individual just according to fitness
+    # Get best individual just according to fitness
     idx_max = np.argmax(population_fits)
-    parent = population[idx_max]    
+    parent = population[idx_max]
 
-    #however if the parent is not the elite, and the parent is trained for longer, the elite
-    #is granted the same evaluation time.
+    # however if the parent is not the elite, and the parent is trained for
+    # longer, the elite is granted the same evaluation time.
     if parent.train_time > default_train_time:
         retrain_elite = False
-        if idx_max != 0 and population[0].train_time > default_train_time and population[0].train_time < parent.train_time:
+        if idx_max != 0 and \
+           population[0].train_time > default_train_time and \
+           population[0].train_time < parent.train_time:
             retrain_elite = True
             elite = population[0]
             elite.train_time = parent.train_time
-            elite.evaluate(grammar, cnn_eval, '%s/best_%d_%d.hdf5' % (run_path, gen, elite.id), '%s/best_%d_%d.hdf5' % (run_path, gen, elite.id))
+            elite.evaluate(
+                grammar,
+                cnn_eval,
+                '%s/best_%d_%d.hdf5' % (run_path, gen, elite.id),
+                '%s/best_%d_%d.hdf5' % (run_path, gen, elite.id),
+            )
             population_fits[0] = elite.fitness
 
         min_train_time = min([ind.current_time for ind in population])
 
-        #also retrain the best individual that is trained just for the default time
+        # also retrain the best individual that is trained just for the
+        # default time
         retrain_10min = False
         if min_train_time < parent.train_time:
-            ids_10min = [ind.current_time == min_train_time for ind in population]
-    
+            ids_10min = [ind.current_time == min_train_time
+                         for ind in population]
+
             if sum(ids_10min) > 0:
                 retrain_10min = True
                 indvs_10min = np.array(population)[ids_10min]
@@ -320,17 +340,23 @@ def select_fittest(population, population_fits, grammar, cnn_eval, gen, run_path
 
                 parent_10min.train_time = parent.train_time
 
-                parent_10min.evaluate(grammar, cnn_eval, '%s/best_%d_%d.hdf5' % (run_path, gen, parent_10min.id), '%s/best_%d_%d.hdf5' % (run_path, gen, parent_10min.id))
+                parent_10min.evaluate(
+                    grammar,
+                    cnn_eval,
+                    '%s/best_%d_%d.hdf5' % (run_path, gen, parent_10min.id),
+                    '%s/best_%d_%d.hdf5' % (run_path, gen, parent_10min.id),
+                )
 
                 population_fits[population.index(parent_10min)] = parent_10min.fitness
 
-
-        #select the fittest amont all retrains and the initial parent
+        # select the fittest amont all retrains and the initial parent
         if retrain_elite:
             if retrain_10min:
-                if parent_10min.fitness > elite.fitness and parent_10min.fitness > parent.fitness:
+                if parent_10min.fitness > elite.fitness and \
+                        parent_10min.fitness > parent.fitness:
                     return deepcopy(parent_10min)
-                elif elite.fitness > parent_10min.fitness and elite.fitness > parent.fitness:
+                elif elite.fitness > parent_10min.fitness and \
+                        elite.fitness > parent.fitness:
                     return deepcopy(elite)
                 else:
                     return deepcopy(parent)
@@ -361,8 +387,8 @@ def mutation_dsge(layer, grammar):
             layer to be mutated (DSGE genotype)
 
         grammar : Grammar
-            Grammar instance, used to perform the initialisation and the genotype
-            to phenotype mapping
+            Grammar instance, used to perform the initialisation and the
+            genotype to phenotype mapping
     """
 
     nt_keys = sorted(list(layer.keys()))
@@ -372,8 +398,10 @@ def mutation_dsge(layer, grammar):
     sge_possibilities = []
     random_possibilities = []
     if len(grammar.grammar[nt_key]) > 1:
-        sge_possibilities = list(set(range(len(grammar.grammar[nt_key]))) -\
-                                 set([layer[nt_key][nt_idx]['ge']]))
+        sge_possibilities = list(
+            set(range(len(grammar.grammar[nt_key])))
+            - set([layer[nt_key][nt_idx]['ge']])
+        )
         random_possibilities.append('ge')
 
     if layer[nt_key][nt_idx]['ga']:
@@ -402,10 +430,12 @@ def mutation_dsge(layer, grammar):
             return NotImplementedError
 
 
-def mutation(individual, grammar, add_layer, re_use_layer, remove_layer, add_connection,\
-             remove_connection, dsge_layer, macro_layer, train_longer, default_train_time):
+def mutation(individual, grammar, add_layer, re_use_layer, remove_layer,
+             add_connection, remove_connection, dsge_layer, macro_layer,
+             train_longer, default_train_time):
     """
-        Network mutations: add and remove layer, add and remove connections, macro structure
+        Network mutations: add and remove layer, add and remove connections,
+        macro structure
 
 
         Parameters
@@ -414,15 +444,15 @@ def mutation(individual, grammar, add_layer, re_use_layer, remove_layer, add_con
             individual to be mutated
 
         grammar : Grammar
-            Grammar instance, used to perform the initialisation and the genotype
-            to phenotype mapping
+            Grammar instance, used to perform the initialisation and the
+            genotype to phenotype mapping
 
         add_layer : float
             add layer mutation rate
 
         re_use_layer : float
-            when adding a new layer, defines the mutation rate of using an already
-            existing layer, i.e., copy by reference
+            when adding a new layer, defines the mutation rate of using an
+            already existing layer, i.e., copy by reference
 
         remove_layer : float
             remove layer mutation rate
@@ -437,7 +467,8 @@ def mutation(individual, grammar, add_layer, re_use_layer, remove_layer, add_con
             inner lever genotype mutation rate
 
         macro_layer : float
-            inner level of the macro layers (i.e., learning, data-augmentation) mutation rate
+            inner level of the macro layers (i.e., learning, data-augmentation)
+            mutation rate
 
         train_longer : float
             increase the training time mutation rate
@@ -451,26 +482,26 @@ def mutation(individual, grammar, add_layer, re_use_layer, remove_layer, add_con
             mutated individual
     """
 
-    #copy so that elite is preserved
+    # copy so that elite is preserved
     ind = deepcopy(individual)
 
-    #Train individual for longer - no other mutation is applied
+    # Train individual for longer - no other mutation is applied
     if random.random() <= train_longer:
         ind.train_time += default_train_time
         return ind
 
-
-    #in case the individual is mutated in any of the structural parameters
-    #the training time is reseted
+    # in case the individual is mutated in any of the structural parameters
+    # the training time is reseted
     ind.current_time = 0
     ind.num_epochs = 0
     ind.train_time = default_train_time
-    
+
     for module in ind.modules:
 
-        #add-layer (duplicate or new)
-        for _ in range(random.randint(1,2)):
-            if len(module.layers) < module.max_expansions and random.random() <= add_layer:
+        # add-layer (duplicate or new)
+        for _ in range(random.randint(1, 2)):
+            if len(module.layers) < module.max_expansions and \
+               random.random() <= add_layer:
                 if random.random() <= re_use_layer:
                     new_layer = random.choice(module.layers)
                 else:
@@ -478,7 +509,7 @@ def mutation(individual, grammar, add_layer, re_use_layer, remove_layer, add_con
 
                 insert_pos = random.randint(0, len(module.layers))
 
-                #fix connections
+                # fix connections
                 for _key_ in sorted(module.connections, reverse=True):
                     if _key_ >= insert_pos:
                         for value_idx, value in enumerate(module.connections[_key_]):
@@ -487,71 +518,84 @@ def mutation(individual, grammar, add_layer, re_use_layer, remove_layer, add_con
 
                         module.connections[_key_+1] = module.connections.pop(_key_)
 
-
                 module.layers.insert(insert_pos, new_layer)
 
-                #make connections of the new layer
+                # make connections of the new layer
                 if insert_pos == 0:
                     module.connections[insert_pos] = [-1]
                 else:
-                    connection_possibilities = list(range(max(0, insert_pos-module.levels_back), insert_pos-1))
+                    connection_possibilities = list(
+                        range(
+                            max(0, insert_pos-module.levels_back),
+                            insert_pos-1,
+                        )
+                    )
                     if len(connection_possibilities) < module.levels_back-1:
                         connection_possibilities.append(-1)
 
-                    sample_size = random.randint(0, len(connection_possibilities))
-                    
-                    module.connections[insert_pos] = [insert_pos-1] 
+                    sample_size = random.randint(
+                        0, len(connection_possibilities))
+
+                    module.connections[insert_pos] = [insert_pos-1]
                     if sample_size > 0:
-                        module.connections[insert_pos] += random.sample(connection_possibilities, sample_size)
+                        module.connections[insert_pos] += random.sample(
+                            connection_possibilities, sample_size)
 
-
-        #remove-layer
-        for _ in range(random.randint(1,2)):
-            if len(module.layers) > module.min_expansions and random.random() <= remove_layer:
+        # remove-layer
+        for _ in range(random.randint(1, 2)):
+            if len(module.layers) > module.min_expansions and \
+               random.random() <= remove_layer:
                 remove_idx = random.randint(0, len(module.layers)-1)
                 del module.layers[remove_idx]
-                
-                #fix connections
+
+                # fix connections
                 for _key_ in sorted(module.connections):
                     if _key_ > remove_idx:
-                        if _key_ > remove_idx+1 and remove_idx in module.connections[_key_]:
+                        if _key_ > remove_idx+1 and \
+                           remove_idx in module.connections[_key_]:
                             module.connections[_key_].remove(remove_idx)
 
                         for value_idx, value in enumerate(module.connections[_key_]):
                             if value >= remove_idx:
                                 module.connections[_key_][value_idx] -= 1
-                        module.connections[_key_-1] = list(set(module.connections.pop(_key_)))
+                        module.connections[_key_-1] = list(
+                            set(module.connections.pop(_key_)))
 
                 if remove_idx == 0:
                     module.connections[0] = [-1]
 
-
         for layer_idx, layer in enumerate(module.layers):
-            #dsge mutation
+            # dsge mutation
             if random.random() <= dsge_layer:
                 mutation_dsge(layer, grammar)
 
-            #add connection
+            # add connection
             if layer_idx != 0 and random.random() <= add_connection:
-                connection_possibilities = list(range(max(0, layer_idx-module.levels_back), layer_idx-1))
-                connection_possibilities = list(set(connection_possibilities) - set(module.connections[layer_idx]))
+                connection_possibilities = list(
+                    range(max(0, layer_idx-module.levels_back), layer_idx-1))
+                connection_possibilities = list(
+                    set(connection_possibilities)
+                    - set(module.connections[layer_idx])
+                )
                 if len(connection_possibilities) > 0:
-                    module.connections[layer_idx].append(random.choice(connection_possibilities))
+                    module.connections[layer_idx].append(
+                        random.choice(connection_possibilities))
 
-            #remove connection
+            # remove connection
             r_value = random.random()
             if layer_idx != 0 and r_value <= remove_connection:
-                connection_possibilities = list(set(module.connections[layer_idx]) - set([layer_idx-1]))
+                connection_possibilities = list(
+                    set(module.connections[layer_idx])
+                    - set([layer_idx-1])
+                )
                 if len(connection_possibilities) > 0:
                     r_connection = random.choice(connection_possibilities)
                     module.connections[layer_idx].remove(r_connection)
 
-
-    #macro level mutation
-    for macro_idx, macro in enumerate(ind.macro): 
+    # macro level mutation
+    for macro_idx, macro in enumerate(ind.macro):
         if random.random() <= macro_layer:
             mutation_dsge(macro, grammar)
-                    
 
     return ind
 
@@ -565,7 +609,7 @@ def load_config(config_file):
         ----------
         config_file : str
             path to the configuration file
-            
+
         Returns
         -------
         config : dict
@@ -580,13 +624,15 @@ def load_config(config_file):
     elif config['evolutionary']['fitness_metric'] == 'mse':
         config['evolutionary']['fitness_function'] = fitness_metrics.mse
     else:
-        raise ValueError('Invalid fitness metric in config file: '
-            f'{config["evolutionary"]["fitness_metric"]}')
+        raise ValueError(
+            'Invalid fitness metric in config file: '
+            f'{config["evolutionary"]["fitness_metric"]}'
+        )
 
     return config
 
 
-def main(run, dataset, config_file, grammar_path): #pragma: no cover
+def main(run, dataset, config_file, grammar_path):
     """
         (1+lambda)-ES
 
@@ -606,58 +652,59 @@ def main(run, dataset, config_file, grammar_path): #pragma: no cover
             path to the grammar file
     """
 
-    #load config file
+    # load config file
     config = load_config(config_file)
 
     run_path = Path(config["setup"]["save_path"], f'run_{run:02d}')
 
-    #load grammar
+    # load grammar
     grammar = Grammar(grammar_path)
 
-    #best fitness so far
+    # best fitness so far
     best_fitness = None
 
-    #load previous population content (if any)
+    # load previous population content (if any)
     unpickle = unpickle_population(run_path)
 
-    #if there is not a previous population
+    # if there is not a previous population
     if unpickle is None:
-        #create directories
+        # create directories
         makedirs(run_path, exist_ok=True)
 
-        #set random seeds
+        # set random seeds
         random.seed(config["setup"]["random_seeds"][run])
         np.random.seed(config["setup"]["numpy_seeds"][run])
 
-        #create evaluator
-        cnn_eval = Evaluator(dataset, config["evolutionary"]["fitness_function"])
+        # create evaluator
+        cnn_eval = Evaluator(
+            dataset, config["evolutionary"]["fitness_function"])
 
-        #save evaluator
+        # save evaluator
         pickle_evaluator(cnn_eval, run_path)
 
-        #status variables
+        # status variables
         last_gen = -1
         total_epochs = 0
-    
-    #in case there is a previous population, load it
+
+    # in case there is a previous population, load it
     else:
-        last_gen, cnn_eval, population, parent, population_fits, pkl_random, pkl_numpy, total_epochs = unpickle
+        last_gen, cnn_eval, population, parent, population_fits, pkl_random, \
+            pkl_numpy, total_epochs = unpickle
         random.setstate(pkl_random)
         np.random.set_state(pkl_numpy)
 
-    
-
     for gen in range(last_gen+1, config["evolutionary"]["num_generations"]):
 
-        #check the total number of epochs (stop criteria)
-        if total_epochs is not None and total_epochs >= config["evolutionary"]["max_epochs"]:
+        # check the total number of epochs (stop criteria)
+        if total_epochs is not None and \
+           total_epochs >= config["evolutionary"]["max_epochs"]:
             break
 
         if gen == 0:
             print('[%d] Creating the initial population' % (run))
             print('[%d] Performing generation: %d' % (run, gen))
-            
-            #create initial population
+
+            # create initial population
             population = [
                 Individual(
                     config["network"]["network_structure"],
@@ -673,7 +720,7 @@ def main(run, dataset, config_file, grammar_path): #pragma: no cover
                 for _id_ in range(config["evolutionary"]["lambda"])
             ]
 
-            #set initial population variables and evaluate population
+            # set initial population variables and evaluate population
             population_fits = []
             for idx, ind in enumerate(population):
                 ind.current_time = 0
@@ -681,81 +728,95 @@ def main(run, dataset, config_file, grammar_path): #pragma: no cover
                 ind.train_time = config["evolutionary"]["default_train_time"]
                 population_fits.append(
                     ind.evaluate(
-                        grammar, 
-                        cnn_eval, 
+                        grammar,
+                        cnn_eval,
                         f'{run_path}/best_{gen}_{idx}.hdf5',
                     )
                 )
                 ind.id = idx
-        
+
         else:
             print('[%d] Performing generation: %d' % (run, gen))
-            
-            #generate offspring (by mutation)
-            offspring = [mutation(parent, grammar, config["evolutionary"]["mutations"]["add_layer"],
-                                  config["evolutionary"]["mutations"]["reuse_layer"], config["evolutionary"]["mutations"]["remove_layer"], 
-                                  config["evolutionary"]["mutations"]["add_connection"], config["evolutionary"]["mutations"]["remove_connection"],
-                                  config["evolutionary"]["mutations"]["dsge_layer"], config["evolutionary"]["mutations"]["macro_layer"],
-                                  config["evolutionary"]["mutations"]["train_longer"], config["evolutionary"]["default_train_time"]) 
-                                  for _ in range(config["evolutionary"]["lambda"])]
+
+            # generate offspring (by mutation)
+            offspring = [
+                mutation(
+                    parent,
+                    grammar,
+                    config["evolutionary"]["mutations"]["add_layer"],
+                    config["evolutionary"]["mutations"]["reuse_layer"],
+                    config["evolutionary"]["mutations"]["remove_layer"],
+                    config["evolutionary"]["mutations"]["add_connection"],
+                    config["evolutionary"]["mutations"]["remove_connection"],
+                    config["evolutionary"]["mutations"]["dsge_layer"],
+                    config["evolutionary"]["mutations"]["macro_layer"],
+                    config["evolutionary"]["mutations"]["train_longer"],
+                    config["evolutionary"]["default_train_time"],
+                )
+                for _ in range(config["evolutionary"]["lambda"])
+            ]
 
             population = [parent] + offspring
 
-            #set elite variables to re-evaluation
+            # set elite variables to re-evaluation
             population[0].current_time = 0
             population[0].num_epochs = 0
             parent_id = parent.id
 
-            #evaluate population
+            # evaluate population
             population_fits = []
             for idx, ind in enumerate(population):
                 population_fits.append(
                     ind.evaluate(
-                        grammar, 
-                        cnn_eval, 
+                        grammar,
+                        cnn_eval,
                         f'{run_path}/best_{gen}_{idx}.hdf5',
                         f'{run_path}/best_{gen-1}_{parent_id}.hdf5',
                     )
                 )
                 ind.id = idx
 
-        #select parent
-        parent = select_fittest(population, population_fits, grammar, cnn_eval, 
-            gen, run_path, config["evolutionary"]["default_train_time"])
+        # select parent
+        parent = select_fittest(
+            population, population_fits, grammar, cnn_eval, gen, run_path,
+            config["evolutionary"]["default_train_time"])
 
-        #remove temporary files to free disk space
+        # remove temporary files to free disk space
         if gen > 1:
             for x in range(len(population)):
                 if os.path.isfile(Path(run_path, f'best_{gen-2}_{x}.hdf5')):
                     os.remove(Path(run_path, f'best_{gen-2}_{x}.hdf5'))
 
-        #update best individual
+        # update best individual
         if best_fitness is None or parent.fitness > best_fitness:
             best_fitness = parent.fitness
 
             if os.path.isfile(Path(run_path, f'best_{gen}_{parent.id}.hdf5')):
-                copyfile(Path(run_path, f'best_{gen}_{parent.id}.hdf5'), Path(run_path, 'best.hdf5'))
+                copyfile(
+                    Path(run_path, f'best_{gen}_{parent.id}.hdf5'),
+                    Path(run_path, 'best.hdf5'),
+                )
 
             with open(Path(run_path, 'best_parent.pkl'), 'wb') as handle:
                 pickle.dump(parent, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-        print('[%d] Best fitness of generation %d: %f' % (run, gen, max(population_fits)))
-        print('[%d] Best overall fitness: %f' % (run, best_fitness))
+        print(f'[{run}] Best fitness of generation {gen}: '
+              '{max(population_fits)}')
+        print(f'[{run}] Best overall fitness: {best_fitness}')
 
-        #save population
+        # save population
         save_pop(population, run_path, gen)
         pickle_population(population, parent, run_path)
 
         total_epochs += sum([ind.num_epochs for ind in population])
 
-
-    #compute testing performance of the fittest network
-    best_test_acc = cnn_eval.testing_performance(str(Path(run_path, 'best.hdf5')))
+    # compute testing performance of the fittest network
+    best_test_acc = cnn_eval.testing_performance(
+        str(Path(run_path, 'best.hdf5')))
     print('[%d] Best test accuracy: %f' % (run, best_test_acc))
 
 
-
-def process_input(argv): #pragma: no cover
+def process_input(argv):
     """
         Maps and checks the input parameters and call the main function.
 
@@ -771,11 +832,14 @@ def process_input(argv): #pragma: no cover
     grammar = None
 
     try:
-        opts, args = getopt.getopt(argv, "hd:c:r:g:",["dataset=","config=","run=","grammar="]   )
+        opts, args = getopt.getopt(
+            argv,
+            "hd:c:r:g:",
+            ["dataset=", "config=", "run=", "grammar="],
+        )
     except getopt.GetoptError:
         print('f_denser.py -d <dataset> -c <config> -r <run> -g <grammra>')
         sys.exit(2)
-
 
     for opt, arg in opts:
         if opt == '-h':
@@ -794,10 +858,9 @@ def process_input(argv): #pragma: no cover
         elif opt in ("-g", "--grammar"):
             grammar = arg
 
-
     error = False
 
-    #check if mandatory variables are all set
+    # check if mandatory variables are all set
     if dataset is None:
         print('The dataset (-d) parameter is mandatory.')
         error = True
@@ -814,7 +877,7 @@ def process_input(argv): #pragma: no cover
         print('f_denser.py -d <dataset> -c <config> -r <run> -g <grammar>')
         exit(-1)
 
-    #check if files exist
+    # check if files exist
     if not os.path.isfile(grammar):
         print('Grammar file does not exist.')
         error = True
@@ -823,15 +886,14 @@ def process_input(argv): #pragma: no cover
         print('Configuration file does not exist.')
         error = True
 
-
     if not error:
         main(run, dataset, config_file, grammar)
     else:
         print('f_denser.py -d <dataset> -c <config> -r <run> -g <grammar>')
 
 
+if __name__ == '__main__':
+    import getopt
+    import sys
 
-if __name__ == '__main__': #pragma: no cover
-    import sys, getopt
-
-    process_input(sys.argv[1:]) 
+    process_input(sys.argv[1:])
