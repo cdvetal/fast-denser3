@@ -487,12 +487,8 @@ def mutation(individual, grammar, add_layer, re_use_layer, remove_layer, add_con
                 #fix connections
                 for _key_ in sorted(module.connections, reverse=True):
                     if _key_ >= insert_pos:
-                        for value_idx, value in enumerate(module.connections[_key_]):
-                            if value >= insert_pos-1:
-                                module.connections[_key_][value_idx] += 1
-
+                        module.connections[_key_] = [value + 1 for value in module.connections[_key_]]
                         module.connections[_key_+1] = module.connections.pop(_key_)
-
 
                 module.layers.insert(insert_pos, new_layer)
 
