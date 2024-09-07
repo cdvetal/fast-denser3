@@ -21,25 +21,54 @@ Fast-DENSER is a new extension to Deep Evolutionary Network Structured Evolution
 ```
 
 ### Requirements
-CUDA >= 10; CuDNN>=7.0. Python3.7 or higher is required. The following python libraries are required: tensorflow, keras, numpy, sklearn, scipy, jsmin, and Pillow. 
 
-### Data download
+python3 or higher is required. The following python libraries are required: tensorflow, keras, numpy, sklearn, scipy, jsmin, and Pillow. For GPU support, CUDA >= 10; CuDNN>=7.0.
+
+### Installation
+To install Fast-DENSER as a python library the following steps should be performed:
+
+1. Open the `requirements_pinned.txt` file and uncomment the desired Tensorflow variant
+2. `$ pip install -r requirements_pinned.txt`
+3. `$ python3 setup.py install`
+
+### Docker image
+
+Intel-based CPU and GPU docker images are available at https://hub.docker.com/r/fillassuncao/f-denser.
+
+Alternatively, you can use the scripts provided in the `docker` folder to locally build a CPU docker image for both Intel and ARM (e.g. Mac M1/M2 etc.). Scripts for running the tests and the example are also provided.
+
+### Example usage
+
+The example seeks for Convolutional Neural Networks (CNNs) for the classification of the Fashion-MNIST dataset.
+
+`python3 -m fast_denser.engine -d fashion-mnist -c example/config.cfg -g example/cnn.grammar`
+
+Please note that the epochs have to be increased from 3 to 1000 to see some realistic results.
+
+
+### Unit tests
+
+The units tests can be found in the f-denser/tests folder, and can be executed in the following way:
+
+`python3 -m tests.test_utils`
+
+`python3 -m tests.test_grammar`
+
+or, to just run all of them:
+
+`python3 -m unittest discover`
+
+
+### Extra data download
 The datasets are located in the folder f-denser/fast_denser/utilities/datasets/data. In particular, we made available for download data for the svhn and tiny-imagenet datasets. The datasets are obtained from http://ufldl.stanford.edu/housenumbers/ and https://tiny-imagenet.herokuapp.com. To download the datasets simply execute the sh scripts:
 
 `sh tiny-imagenet-200.sh`
 
 `sh svhn/svhn.sh`
 
-### Instalation
-To install Fast-DENSER as a python library the following steps should be performed: 
-
-`pip install -r requirements.txt`
-
-`python setup.py install`
-
 ### Framework Usage
 
-`python -m fast_denser.engine -d <dataset> -c <config> -r <run> -g <grammar>`
+`python3 -m fast_denser.engine -d <dataset> -c <config> -r <run> -g <grammar>`
 
 -d [mandatory] can assume one of the following values: mnist, fashion-mnist, svhn, cifar10, cifar100-fine, cifar100-coarse, tiny-imagenet
 
@@ -92,25 +121,6 @@ fast_denser.search(0, 'fashion-mnist', 'example/config.json', 'example/cnn.gramm
 ```
 
 The first parameter specifies the run, the second the dataset, the third the configuration file, and the last the grammar. 
-
-
-### Unit tests
-
-The units tests can be found in the f-denser/tests folder, and can be executed in the following way:
-
-`python3.7 -m tests.test_utils`
-
-`python3.7 -m tests.test_grammar`
-
-### Usage example
-
-The example seeks for Convolutional Neural Networks (CNNs) for the classification of the Fashion-MNIST dataset.
-
-`python3.7 -m fast_denser.engine -d fashion-mnist -c example/config.cfg -g example/cnn.grammar`
-
-### Docker image
-
-CPU and GPU docker images are available at https://hub.docker.com/r/fillassuncao/f-denser.
 
 ### Grammar
 
