@@ -151,7 +151,7 @@ class Evaluator:
             compute testing performance of the model
     """
 
-    def __init__(self, dataset, fitness_metric):
+    def __init__(self, dataset, fitness_metric, threading=True):
         """
             Creates the Evaluator instance and loads the dataset.
 
@@ -161,9 +161,8 @@ class Evaluator:
                 dataset to be loaded
         """
 
-        self.dataset = load_dataset(dataset)
+        self.dataset = load_dataset(dataset, threading=threading)
         self.fitness_metric = fitness_metric
-
 
     def get_layers(self, phenotype):
         """

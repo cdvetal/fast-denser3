@@ -117,7 +117,7 @@ def resize_data(args):
 
 
 
-def load_dataset(dataset, shape=(32,32)):
+def load_dataset(dataset, shape=(32,32), threading=True):
     """
         Load a specific dataset
 
@@ -152,28 +152,35 @@ def load_dataset(dataset, shape=(32,32)):
         x_train = 255-x_train
         x_test = 255-x_test
 
-        num_pool_workers=1 
-        with contextlib.closing(Pool(num_pool_workers)) as po: 
-            pool_results = po.map_async(resize_data, [(x_train, shape)])
-            x_train = pool_results.get()[0]
-
-        with contextlib.closing(Pool(num_pool_workers)) as po: 
-            pool_results = po.map_async(resize_data, [(x_test, shape)])
-            x_test = pool_results.get()[0]
+        if threading:
+            num_pool_workers=1
+            with contextlib.closing(Pool(num_pool_workers)) as po: 
+                pool_results = po.map_async(resize_data, [(x_train, shape)])
+                x_train = pool_results.get()[0]
+            with contextlib.closing(Pool(num_pool_workers)) as po: 
+                pool_results = po.map_async(resize_data, [(x_test, shape)])
+                x_test = pool_results.get()[0]
+        else:
+            x_train = resize_data((x_train, shape))
+            x_test = resize_data((x_test, shape))
 
     elif dataset == 'mnist':
         (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
         n_classes = 10
 
-        num_pool_workers=1 
-        with contextlib.closing(Pool(num_pool_workers)) as po: 
-            pool_results = po.map_async(resize_data, [(x_train, shape)])
-            x_train = pool_results.get()[0]
+        if threading:
+            num_pool_workers=1 
+            with contextlib.closing(Pool(num_pool_workers)) as po: 
+                pool_results = po.map_async(resize_data, [(x_train, shape)])
+                x_train = pool_results.get()[0]
 
-        with contextlib.closing(Pool(num_pool_workers)) as po: 
-            pool_results = po.map_async(resize_data, [(x_test, shape)])
-            x_test = pool_results.get()[0]
-        
+            with contextlib.closing(Pool(num_pool_workers)) as po: 
+                pool_results = po.map_async(resize_data, [(x_test, shape)])
+                x_test = pool_results.get()[0]
+        else:
+            x_train = resize_data((x_train, shape))
+            x_test = resize_data((x_test, shape))
+
     #255, unbalanced
     elif dataset == 'svhn':
         x_train, y_train, x_test, y_test = load_svhn(SVHN)
