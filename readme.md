@@ -52,7 +52,7 @@ To install Fast-DENSER as a python library the following steps should be perform
 
 ### Configuration File Parameters
 
-The configuration file is formated in JSON. An example can be found [here](https://github.com/fillassuncao/fast-denser3/blob/master/example/config.json). A description of the parameters contained in the configuration file is below.
+The configuration file is formated in JSON. An example can be found [here](https://github.com/fillassuncao/fast-denser3/blob/master/example/config.json) (increase epochs from 3 to 1000 to start seeing realistic results). A description of the parameters contained in the configuration file is below.
 
 |      Parameter Name     |                                                       Description     |
 |:-------------------:|:----------------------------------------------------------------------------------------------------------------------:|
