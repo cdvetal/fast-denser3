@@ -17,7 +17,7 @@ from fast_denser.utilities.datasets.svhn import load_svhn
 from fast_denser.utilities.datasets.cifar import load_cifar
 from fast_denser.utilities.datasets.tiny_imagenet import load_tiny_imagenet
 from sklearn.model_selection import train_test_split
-import keras
+import tensorflow.keras as keras
 from multiprocessing import Pool
 import tensorflow as tf
 import contextlib
