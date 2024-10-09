@@ -669,6 +669,7 @@ def main(run, dataset, config_file, grammar_path): #pragma: no cover
             #set initial population variables and evaluate population
             population_fits = []
             for idx, ind in enumerate(population):
+                print('[%d] Training for population %s/%s...' % (run, idx+1, len(population)-1))
                 ind.current_time = 0
                 ind.num_epochs = 0
                 ind.train_time = config["TRAINING"]["default_train_time"]
@@ -696,6 +697,7 @@ def main(run, dataset, config_file, grammar_path): #pragma: no cover
             #evaluate population
             population_fits = []
             for idx, ind in enumerate(population):
+                print('[%d] Training for population %s/%s...' % (run, idx+1, len(population)-1))
                 population_fits.append(ind.evaluate(grammar, cnn_eval, config["TRAINING"]["datagen"], config["TRAINING"]["datagen_test"], '%s/run_%d/best_%d_%d.hdf5' % (config["EVOLUTIONARY"]["save_path"], run, gen, idx), '%s/run_%d/best_%d_%d.hdf5' % (config["EVOLUTIONARY"]["save_path"], run, gen-1, parent_id)))
                 ind.id = idx
 

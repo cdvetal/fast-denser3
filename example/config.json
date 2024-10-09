@@ -14,7 +14,7 @@
     "lambda": 4,
 
     //maximum of epochs to perform. Evolution is halted when the current number of epochs surpasses this value
-    "max_epochs": 10000,
+    "max_epochs": 3,
 
     //place where the experiment is saved
     "save_path": "./experiments/",

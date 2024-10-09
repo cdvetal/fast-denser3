@@ -10,7 +10,7 @@
 <activation-function> ::= act:linear | act:relu | act:sigmoid
 <bias> ::= bias:True | bias:False
 <softmax> ::= layer:fc act:softmax num-units:10 bias:True
-<learning> ::= <gradient-descent> <early-stop> [batch_size,int,1,50,500] epochs:10000 | <rmsprop> <early-stop> [batch_size,int,1,50,500] epochs:10000 | <adam> <early-stop> [batch_size,int,1,50,500] epochs:10000
+<learning> ::= <gradient-descent> <early-stop> [batch_size,int,1,50,500] epochs:3 | <rmsprop> <early-stop> [batch_size,int,1,50,500] epochs:3 | <adam> <early-stop> [batch_size,int,1,50,500] epochs:3
 <gradient-descent> ::= learning:gradient-descent [lr,float,1,0.0001,0.1] [momentum,float,1,0.68,0.99] [decay,float,1,0.000001,0.001] <nesterov>
 <nesterov> ::= nesterov:True | nesterov:False
 <adam> ::= learning:adam [lr,float,1,0.0001,0.1] [beta1,float,1,0.5,1] [beta2,float,1,0.5,1] [decay,float,1,0.000001,0.001]
